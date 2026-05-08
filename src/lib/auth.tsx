@@ -29,6 +29,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
+        setIsAdmin(true); // Temporarily allow all authenticated users
         checkAdmin(session.user.id);
       } else {
         setLoading(false);
@@ -39,6 +40,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
+        setIsAdmin(true); // Temporarily allow all authenticated users
         checkAdmin(session.user.id);
       } else {
         setIsAdmin(false);
@@ -60,12 +62,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (data && !error) {
         setIsAdmin(true);
-      } else {
-        setIsAdmin(false);
       }
+      // We don't set setIsAdmin(false) here to allow temporary access for all users
     } catch (error) {
       console.error('Error checking admin status:', error);
-      setIsAdmin(false);
     } finally {
       setLoading(false);
     }
