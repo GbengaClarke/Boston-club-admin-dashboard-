@@ -1,11 +1,10 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { supabase } from './supabase';
-import { User, Session } from '@supabase/supabase-js';
+import React, { createContext, useContext, useEffect, useState } from "react";
+import type { User, Session } from "@supabase/supabase-js";
+import { supabase } from "./supabase";
 
 type AuthContextType = {
   user: User | null;
   session: Session | null;
-  isAdmin: boolean;
   loading: boolean;
   signInWithPassword: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -16,79 +15,68 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
-  const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!supabase) {
+    const getInitialSession = async () => {
+      const {
+        data: { session },
+        error,
+      } = await supabase.auth.getSession();
+
+      if (error) {
+        console.error("Error fetching session:", error.message);
+      }
+
+      setSession(session);
+      setUser(session?.user ?? null);
       setLoading(false);
-      return;
-    }
+    };
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    getInitialSession();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
-      if (session?.user) {
-        setIsAdmin(true); // Temporarily allow all authenticated users
-        checkAdmin(session.user.id);
-      } else {
-        setLoading(false);
-      }
+      setLoading(false);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        setIsAdmin(true); // Temporarily allow all authenticated users
-        checkAdmin(session.user.id);
-      } else {
-        setIsAdmin(false);
-        setLoading(false);
-      }
-    });
-
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
-  const checkAdmin = async (userId: string) => {
-    if (!supabase) return;
-    try {
-      const { data, error } = await supabase
-        .from('admins')
-        .select('*')
-        .eq('user_id', userId)
-        .single();
-      
-      if (data && !error) {
-        setIsAdmin(true);
-      }
-      // We don't set setIsAdmin(false) here to allow temporary access for all users
-    } catch (error) {
-      console.error('Error checking admin status:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const signInWithPassword = async (email: string, password: string) => {
-    if (!supabase) return;
     const { error } = await supabase.auth.signInWithPassword({
       email,
-      password
+      password,
     });
+
     if (error) {
       throw error;
     }
   };
 
   const signOut = async () => {
-    if (!supabase) return;
-    await supabase.auth.signOut();
+    const { error } = await supabase.auth.signOut();
+
+    if (error) {
+      throw error;
+    }
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, isAdmin, loading, signInWithPassword, signOut }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        session,
+        loading,
+        signInWithPassword,
+        signOut,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
@@ -96,8 +84,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+
+  if (!context) {
+    throw new Error("useAuth must be used within an AuthProvider");
   }
+
   return context;
 };

@@ -1,36 +1,68 @@
-import React, { useState } from 'react';
-import { useAuth } from '../lib/auth';
-import { LogIn } from 'lucide-react';
-import { Navigate } from 'react-router-dom';
+import React, { useState } from "react";
+import { useAuth } from "../lib/auth";
+import { LogIn } from "lucide-react";
+import { Navigate, useNavigate } from "react-router-dom"; // 1. Added useNavigate
+import { toast } from "react-hot-toast"; // 2. Import toast
 
 export function Login() {
   const { session, signInWithPassword, loading } = useAuth();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const navigate = useNavigate(); // 3. Initialize navigate
+
+  const [email, setEmail] = useState("sample@test.com");
+  const [password, setPassword] = useState("aaaaaaaa");
+  const [error, setError] = useState("");
   const [isSigningIn, setIsSigningIn] = useState(false);
 
-  if (!loading && session) {
+  // if (!loading && session) {
+  if (session) {
     return <Navigate to="/" replace />;
   }
 
+  // const handleLogin = async (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   setError("");
+
+  //   try {
+  //     setIsSigningIn(true);
+  //     await signInWithPassword(email, password);
+
+  //     toast.success("Welcome back!");
+  //     navigate("/", { replace: true });
+  //   } catch (err: any) {
+  //     console.error(err);
+  //     const errorMessage =
+  //       err.message || "Failed to sign in. Please check your credentials.";
+  //     setError(errorMessage);
+  //     toast.error(errorMessage);
+  //   } finally {
+  //     setIsSigningIn(false);
+  //   }
+  // };
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
-    
+    setError("");
+
     try {
       setIsSigningIn(true);
       await signInWithPassword(email, password);
+
+      // ONLY show the toast here.
+      // The "if (session) return <Navigate.../>" block at the top of
+      // this component will detect the new session and move you home.
+      toast.success("Welcome back!");
     } catch (err: any) {
       console.error(err);
-      setError(err.message || 'Failed to sign in. Please check your credentials.');
+      const errorMessage = err.message || "Failed to sign in.";
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setIsSigningIn(false);
     }
   };
-
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+      {/* ... rest of your UI remains the same ... */}
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center">
           <div className="w-12 h-12 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-bold text-xl">
@@ -54,7 +86,9 @@ export function Login() {
               </div>
             )}
             <div>
-              <label className="block text-sm font-medium text-slate-700">Email Address</label>
+              <label className="block text-sm font-medium text-slate-700">
+                Email Address
+              </label>
               <input
                 type="email"
                 required
@@ -64,7 +98,9 @@ export function Login() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700">Password</label>
+              <label className="block text-sm font-medium text-slate-700">
+                Password
+              </label>
               <input
                 type="password"
                 required
@@ -79,7 +115,7 @@ export function Login() {
               className="w-full flex justify-center items-center py-2.5 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               <LogIn className="w-5 h-5 mr-2" />
-              {isSigningIn ? 'Signing in...' : 'Sign in'}
+              {isSigningIn ? "Signing in..." : "Sign in"}
             </button>
           </form>
         </div>
