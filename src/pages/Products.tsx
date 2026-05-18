@@ -1,4 +1,4 @@
-// import React, { useState } from "react";
+// import { useState } from "react";
 // import { Plus, Edit2, Trash2, ShoppingBag, Sparkles, X } from "lucide-react";
 // import { motion, AnimatePresence } from "framer-motion";
 // import { useGetProducts } from "../productFeatures/useGetProducts";
@@ -26,7 +26,7 @@
 //   category: Category;
 //   material: Material;
 //   sizes?: number[];
-//   product_images?: ProductImage[]; // Added nested relationship
+//   product_images?: ProductImage[];
 //   created_at?: string;
 // }
 
@@ -35,12 +35,18 @@
 //   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 //   const { isLoading, products, error } = useGetProducts();
 
-//   // console.log(products[0].product_images[0].image_url);
-
-//   // products[0].product_images[0].image_url
-
 //   const deleteProduct = (id: string | number) => {
 //     confirm(`Are you sure you want to delete product ${id}?`);
+//   };
+
+//   // Helper logic to find the specific main image or fallback to the first index
+//   const getMainImage = (product: Product) => {
+//     if (!product.product_images || product.product_images.length === 0)
+//       return null;
+//     return (
+//       product.product_images.find((img) => img.is_main) ||
+//       product.product_images[0]
+//     );
 //   };
 
 //   return (
@@ -99,6 +105,7 @@
 //         </motion.form>
 //       )}
 
+//       {/* Table Section */}
 //       <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
 //         <div className="overflow-x-auto">
 //           <table className="w-full text-left text-sm whitespace-nowrap">
@@ -109,94 +116,88 @@
 //                 <th className="px-6 py-4">Category</th>
 //                 <th className="px-6 py-4">Material</th>
 //                 <th className="px-6 py-4">Price</th>
-//                 {/* <th className="px-6 py-4">Status</th> */}
 //                 <th className="px-6 py-4 text-right">Actions</th>
 //               </tr>
 //             </thead>
 //             <tbody className="divide-y divide-slate-100">
-//               {/* Using your Product interface fields here */}
-//               {(products || []).map((product: Product) => (
-//                 <motion.tr
-//                   key={product.id}
-//                   onClick={() => setSelectedProduct(product)}
-//                   className="hover:bg-slate-50/50 transition-colors group cursor-pointer"
-//                 >
-//                   <td className="px-6 py-4">
-//                     <div className="w-12 h-12 bg-slate-50 rounded-lg border border-slate-100 flex items-center justify-center text-slate-300 overflow-hidden">
-//                       {/* Optional chaining (?.) ensures the app doesn't crash if the array is empty */}
-//                       {product.product_images?.[0]?.image_url ? (
-//                         <img
-//                           src={product.product_images[0].image_url}
-//                           alt={product.name}
-//                           className="w-full h-full object-cover"
-//                         />
-//                       ) : (
-//                         <ShoppingBag className="w-5 h-5" />
-//                       )}
-//                     </div>
-//                   </td>
-
-//                   <td className="px-6 py-4">
-//                     <div className="flex flex-col">
-//                       <span className="font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">
-//                         {product.name}
-//                       </span>
-//                       <span className="text-[10px] text-slate-400 font-mono truncate max-w-[150px]">
-//                         {product.description}
-//                       </span>
-//                     </div>
-//                   </td>
-//                   <td className="px-6 py-4">
-//                     <span className="bg-indigo-50 text-indigo-600 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
-//                       {product.category}
-//                     </span>
-//                   </td>
-//                   <td className="px-6 py-4">
-//                     <span className="text-slate-600 font-medium capitalize">
-//                       {product.material}
-//                     </span>
-//                   </td>
-//                   <td className="px-6 py-4">
-//                     <div className="flex flex-col">
-//                       <span className="font-bold text-slate-900">
-//                         ${product.regularPrice}
-//                       </span>
-//                       {product.discount > 0 && (
-//                         <span className="text-[10px] text-rose-500">
-//                           -{product.discount}% off
+//               {(products || []).map((product: Product) => {
+//                 const mainImage = getMainImage(product);
+//                 return (
+//                   <motion.tr
+//                     key={product.id}
+//                     onClick={() => setSelectedProduct(product)}
+//                     className="hover:bg-slate-50/50 transition-colors group cursor-pointer"
+//                   >
+//                     <td className="px-6 py-4">
+//                       <div className="w-12 h-12 bg-slate-50 rounded-lg border border-slate-100 flex items-center justify-center text-slate-300 overflow-hidden">
+//                         {mainImage?.image_url ? (
+//                           <img
+//                             src={mainImage.image_url}
+//                             alt={product.name}
+//                             className="w-full h-full object-cover"
+//                           />
+//                         ) : (
+//                           <ShoppingBag className="w-5 h-5" />
+//                         )}
+//                       </div>
+//                     </td>
+//                     <td className="px-6 py-4">
+//                       <div className="flex flex-col">
+//                         <span className="font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">
+//                           {product.name}
 //                         </span>
-//                       )}
-//                     </div>
-//                   </td>
-//                   {/* <td className="px-6 py-4">
-//                     {product.isNewArrival ? (
-//                       <span className="inline-flex items-center gap-1.5 text-amber-600 bg-amber-50 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase">
-//                         <Sparkles className="w-3 h-3" /> New
+//                         <span className="text-[10px] text-slate-400 font-mono truncate max-w-[150px]">
+//                           {product.description}
+//                         </span>
+//                       </div>
+//                     </td>
+//                     <td className="px-6 py-4 text-xs font-bold">
+//                       <span className="bg-indigo-50 text-indigo-600 px-2.5 py-1 rounded-full uppercase tracking-wider">
+//                         {product.category}
 //                       </span>
-//                     ) : (
-//                       <span className="text-slate-400 text-[10px] font-bold uppercase">
-//                         Standard
-//                       </span>
-//                     )}
-//                   </td> */}
-//                   <td className="px-6 py-4 text-right">
-//                     <div className="flex items-center justify-end gap-1">
-//                       <button className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all">
-//                         <Edit2 className="w-4 h-4" />
-//                       </button>
-//                       <button
-//                         onClick={() => product.id && deleteProduct(product.id)}
-//                         className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all"
+//                     </td>
+//                     <td className="px-6 py-4 text-slate-600 font-medium capitalize">
+//                       {product.material}
+//                     </td>
+//                     {/* <td className="px-6 py-4 font-bold text-slate-900">
+//                       ${product.regularPrice}
+//                     </td> */}
+//                     <td className="px-6 py-4">
+//                       <div className="flex flex-col">
+//                         <span className="font-bold text-slate-900">
+//                           ₦{product.regularPrice}
+//                         </span>
+//                         {product.discount > 0 && (
+//                           <span className="text-[10px] text-rose-500">
+//                             -{product.discount}% off
+//                           </span>
+//                         )}
+//                       </div>
+//                     </td>
+//                     <td className="px-6 py-4 text-right">
+//                       <div
+//                         className="flex items-center justify-end gap-1"
+//                         onClick={(e) => e.stopPropagation()}
 //                       >
-//                         <Trash2 className="w-4 h-4" />
-//                       </button>
-//                     </div>
-//                   </td>
-//                 </motion.tr>
-//               ))}
+//                         <button className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all">
+//                           <Edit2 className="w-4 h-4" />
+//                         </button>
+//                         <button
+//                           onClick={() =>
+//                             product.id && deleteProduct(product.id)
+//                           }
+//                           className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all"
+//                         >
+//                           <Trash2 className="w-4 h-4" />
+//                         </button>
+//                       </div>
+//                     </td>
+//                   </motion.tr>
+//                 );
+//               })}
 //             </tbody>
 //           </table>
-//           {(!products || products.length === 0) && (
+//           {(!products || products.length === 0) && !isLoading && (
 //             <div className="py-20 text-center">
 //               <ShoppingBag className="w-12 h-12 text-slate-200 mx-auto mb-4" />
 //               <p className="text-slate-400 text-sm">
@@ -207,73 +208,10 @@
 //         </div>
 //       </div>
 
-//       {/* Table Section */}
-//       {/* <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-//         <div className="overflow-x-auto">
-//           <table className="w-full text-left text-sm whitespace-nowrap">
-//             <thead className="bg-slate-50/50 text-slate-400 text-[10px] uppercase font-bold tracking-widest border-b border-slate-200">
-//               <tr>
-//                 <th className="px-6 py-4">Preview</th>
-//                 <th className="px-6 py-4">Product Details</th>
-//                 <th className="px-6 py-4">Category</th>
-//                 <th className="px-6 py-4 text-right">Actions</th>
-//               </tr>
-//             </thead>
-//             <tbody className="divide-y divide-slate-100">
-//               {(products || []).map((product: Product) => (
-//                 <motion.tr
-//                   key={product.id}
-//                   onClick={() => setSelectedProduct(product)}
-//                   className="hover:bg-slate-50/50 transition-colors group cursor-pointer"
-//                 >
-//                   <td className="px-6 py-4">
-//                     <div className="w-12 h-12 bg-slate-50 rounded-lg border border-slate-100 flex items-center justify-center text-slate-300">
-//                       <ShoppingBag className="w-5 h-5" />
-//                     </div>
-//                   </td>
-//                   <td className="px-6 py-4">
-//                     <div className="flex flex-col">
-//                       <span className="font-bold text-slate-900 group-hover:text-indigo-600 transition-colors">
-//                         {product.name}
-//                       </span>
-//                       <span className="text-[10px] text-slate-400 font-mono truncate max-w-[150px]">
-//                         {product.description}
-//                       </span>
-//                     </div>
-//                   </td>
-//                   <td className="px-6 py-4">
-//                     <span className="bg-indigo-50 text-indigo-600 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
-//                       {product.category}
-//                     </span>
-//                   </td>
-//                   <td
-//                     className="px-6 py-4 text-right"
-//                     onClick={(e) => e.stopPropagation()}
-//                   >
-//                     <div className="flex items-center justify-end gap-1">
-//                       <button className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all">
-//                         <Edit2 className="w-4 h-4" />
-//                       </button>
-//                       <button
-//                         onClick={() => product.id && deleteProduct(product.id)}
-//                         className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all"
-//                       >
-//                         <Trash2 className="w-4 h-4" />
-//                       </button>
-//                     </div>
-//                   </td>
-//                 </motion.tr>
-//               ))}
-//             </tbody>
-//           </table>
-//         </div>
-//       </div> */}
-
 //       {/* --- SIDE DRAWER MODAL --- */}
 //       <AnimatePresence>
 //         {selectedProduct && (
 //           <>
-//             {/* Overlay */}
 //             <motion.div
 //               initial={{ opacity: 0 }}
 //               animate={{ opacity: 1 }}
@@ -281,7 +219,6 @@
 //               onClick={() => setSelectedProduct(null)}
 //               className="fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-40"
 //             />
-//             {/* Drawer */}
 //             <motion.div
 //               initial={{ x: "100%" }}
 //               animate={{ x: 0 }}
@@ -302,11 +239,21 @@
 //               </div>
 
 //               <div className="flex-1 overflow-y-auto p-8">
-//                 <div className="aspect-square w-full bg-slate-50 rounded-2xl border border-slate-200 flex flex-col items-center justify-center text-slate-300 mb-6">
-//                   <ShoppingBag className="w-12 h-12 mb-2" />
-//                   <p className="text-[10px] font-bold uppercase tracking-widest">
-//                     Image Placeholder
-//                   </p>
+//                 <div className="aspect-square w-full bg-slate-50 rounded-2xl border border-slate-200 flex flex-col items-center justify-center text-slate-300 mb-6 overflow-hidden">
+//                   {getMainImage(selectedProduct)?.image_url ? (
+//                     <img
+//                       src={getMainImage(selectedProduct)?.image_url}
+//                       alt={selectedProduct.name}
+//                       className="w-full h-full object-cover"
+//                     />
+//                   ) : (
+//                     <>
+//                       <ShoppingBag className="w-12 h-12 mb-2" />
+//                       <p className="text-[10px] font-bold uppercase tracking-widest">
+//                         No Image Available
+//                       </p>
+//                     </>
+//                   )}
 //                 </div>
 
 //                 <div className="space-y-6">
@@ -345,8 +292,8 @@
 //                 </div>
 //               </div>
 
-//               <div className="p-6 border-t border-slate-100 flex gap-3">
-//                 <button className="flex-1 bg-indigo-600 text-white py-3 rounded-xl font-bold text-sm hover:bg-indigo-700 transition-colors">
+//               <div className="p-6 border-t border-slate-100">
+//                 <button className="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold text-sm hover:bg-indigo-700 transition-colors">
 //                   Edit Details
 //                 </button>
 //               </div>
@@ -358,7 +305,7 @@
 //   );
 // }
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { Plus, Edit2, Trash2, ShoppingBag, Sparkles, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGetProducts } from "../productFeatures/useGetProducts";
@@ -407,6 +354,20 @@ export function Products() {
       product.product_images.find((img) => img.is_main) ||
       product.product_images[0]
     );
+  };
+
+  // Logic for category-specific styling
+  const getCategoryStyles = (category: Category) => {
+    switch (category) {
+      case "clogs":
+        return "bg-amber-50 text-amber-700 border-amber-100";
+      case "sandals":
+        return "bg-emerald-50 text-emerald-700 border-emerald-100";
+      case "slides":
+        return "bg-sky-50 text-sky-700 border-sky-100";
+      default:
+        return "bg-slate-50 text-slate-600 border-slate-100";
+    }
   };
 
   return (
@@ -512,20 +473,21 @@ export function Products() {
                       </div>
                     </td>
                     <td className="px-6 py-4 text-xs font-bold">
-                      <span className="bg-indigo-50 text-indigo-600 px-2.5 py-1 rounded-full uppercase tracking-wider">
+                      <span
+                        className={`px-2.5 py-1 rounded-full border uppercase tracking-wider ${getCategoryStyles(
+                          product.category
+                        )}`}
+                      >
                         {product.category}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-slate-600 font-medium capitalize">
                       {product.material}
                     </td>
-                    {/* <td className="px-6 py-4 font-bold text-slate-900">
-                      ${product.regularPrice}
-                    </td> */}
                     <td className="px-6 py-4">
                       <div className="flex flex-col">
                         <span className="font-bold text-slate-900">
-                          ₦{product.regularPrice}
+                          ₦{product.regularPrice.toLocaleString()}
                         </span>
                         {product.discount > 0 && (
                           <span className="text-[10px] text-rose-500">
@@ -645,7 +607,7 @@ export function Products() {
                         Price
                       </span>
                       <span className="font-semibold text-slate-700">
-                        ${selectedProduct.regularPrice}
+                        ₦{selectedProduct.regularPrice.toLocaleString()}
                       </span>
                     </div>
                   </div>
