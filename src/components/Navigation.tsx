@@ -1,18 +1,17 @@
-import {
-  LayoutDashboard,
-  ShoppingBag,
-  ShoppingCart,
-  LogOut,
-  Bell,
-  Search,
-  Menu,
-  MessageSquare,
-  Users,
-  FolderTree,
-} from "lucide-react";
-import { cn } from "../lib/utils";
-import { useLocation, Link } from "react-router-dom";
-import { useAuth } from "../lib/auth";
+// import {
+//   LayoutDashboard,
+//   ShoppingBag,
+//   ShoppingCart,
+//   LogOut,
+//   MessageSquare,
+//   Users,
+//   FolderTree,
+// } from "lucide-react";
+
+// import { GiSlippers } from "react-icons/gi";
+// import { cn } from "../lib/utils";
+// import { useLocation, Link } from "react-router-dom";
+// import { useAuth } from "../lib/auth";
 
 // export function Sidebar({ className }: { className?: string }) {
 //   const location = useLocation();
@@ -29,25 +28,23 @@ import { useAuth } from "../lib/auth";
 //   ];
 
 //   return (
-//     <aside
+//     <div
 //       className={cn(
-//         "flex flex-col w-64 h-screen border-r border-slate-800 bg-slate-900 text-sm font-medium",
+//         // Remove h-screen here so it doesn't conflict with the layout wrapper
+//         "flex flex-col w-64 border-r border-slate-800 bg-slate-900 text-sm font-medium",
 //         className
 //       )}
 //     >
 //       <div className="p-6 pb-2">
 //         <div className="flex items-center gap-3 text-white font-semibold text-lg tracking-tight">
 //           <div className="w-8 h-8 rounded-lg bg-indigo-500 flex items-center justify-center text-white font-bold">
-//             B
+//             <GiSlippers />
 //           </div>
-//           BostonClub
+//           Boston Club
 //         </div>
 //       </div>
 
 //       <div className="px-4 py-6 flex-1 flex flex-col gap-1">
-//         {/* <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 px-3">
-//           Main Menu
-//         </div> */}
 //         {navItems.map((item) => (
 //           <Link
 //             key={item.name}
@@ -67,20 +64,40 @@ import { useAuth } from "../lib/auth";
 //       <div className="px-4 py-6 border-t border-slate-800 flex flex-col gap-1">
 //         <button
 //           onClick={signOut}
-//           className="flex items-center gap-3 px-3 py-2.5 content-end rounded-lg transition-colors text-slate-400 hover:text-rose-400 hover:bg-slate-800 mt-1"
+//           className="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-slate-400 hover:text-rose-400 hover:bg-slate-800 mt-1"
 //         >
 //           <LogOut className="w-4 h-4" />
 //           Logout
 //         </button>
 //       </div>
-//     </aside>
+//     </div>
 //   );
 // }
+
+import {
+  LayoutDashboard,
+  ShoppingBag,
+  ShoppingCart,
+  LogOut,
+  MessageSquare,
+  Users,
+  FolderTree,
+  Upload, // Added Upload icon
+  Loader2, // Added Loader icon
+} from "lucide-react";
+
+import { GiSlippers } from "react-icons/gi";
+import { cn } from "../lib/utils";
+import { useLocation, Link } from "react-router-dom";
+import { useAuth } from "../lib/auth";
+import { useState } from "react"; // Added for loading state
+import uploadBostonClubCatalog from "@/data/sample-data";
 
 export function Sidebar({ className }: { className?: string }) {
   const location = useLocation();
   const { signOut } = useAuth();
   const active = location.pathname;
+  const [isUploading, setIsUploading] = useState(false);
 
   const navItems = [
     { name: "Dashboard", path: "/", icon: LayoutDashboard },
@@ -91,10 +108,24 @@ export function Sidebar({ className }: { className?: string }) {
     { name: "Customers", path: "/customers", icon: Users },
   ];
 
+  const handleBatchUpload = async () => {
+    if (!confirm("Are you sure you want to upload 20 dummy products?")) return;
+
+    setIsUploading(true);
+    try {
+      await uploadBostonClubCatalog();
+      alert("Products uploaded successfully!");
+    } catch (error) {
+      console.error(error);
+      alert("Upload failed. Check console.");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   return (
     <div
       className={cn(
-        // Remove h-screen here so it doesn't conflict with the layout wrapper
         "flex flex-col w-64 border-r border-slate-800 bg-slate-900 text-sm font-medium",
         className
       )}
@@ -102,11 +133,28 @@ export function Sidebar({ className }: { className?: string }) {
       <div className="p-6 pb-2">
         <div className="flex items-center gap-3 text-white font-semibold text-lg tracking-tight">
           <div className="w-8 h-8 rounded-lg bg-indigo-500 flex items-center justify-center text-white font-bold">
-            B
+            <GiSlippers />
           </div>
-          BostonClub
+          Boston Club
         </div>
       </div>
+
+      {/* --- New Upload Button --- */}
+      <button
+        onClick={handleBatchUpload}
+        disabled={isUploading}
+        className={cn(
+          "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors mt-1",
+          "text-slate-400 hover:text-emerald-400 hover:bg-slate-800 disabled:opacity-50"
+        )}
+      >
+        {isUploading ? (
+          <Loader2 className="w-4 h-4 animate-spin" />
+        ) : (
+          <Upload className="w-4 h-4" />
+        )}
+        {isUploading ? "Uploading..." : "Upload Seed Data"}
+      </button>
 
       <div className="px-4 py-6 flex-1 flex flex-col gap-1">
         {navItems.map((item) => (

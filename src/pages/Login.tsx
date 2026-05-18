@@ -3,6 +3,7 @@ import { useAuth } from "../lib/auth";
 import { LogIn } from "lucide-react";
 import { Navigate, useNavigate } from "react-router-dom"; // 1. Added useNavigate
 import { toast } from "react-hot-toast"; // 2. Import toast
+import { GiSlippers } from "react-icons/gi";
 
 export function Login() {
   const { session, signInWithPassword, loading } = useAuth();
@@ -66,7 +67,7 @@ export function Login() {
       <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <div className="flex justify-center">
           <div className="w-12 h-12 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-bold text-xl">
-            B
+            <GiSlippers />
           </div>
         </div>
         <h2 className="mt-6 text-center text-3xl font-extrabold text-slate-900">

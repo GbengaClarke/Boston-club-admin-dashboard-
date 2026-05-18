@@ -6,12 +6,11 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
   const { signOut } = useAuth();
 
   const handleSignOut = () => {
-    // 1. Trigger a custom toast with "Confirm" and "Cancel" buttons
     toast(
       (t) => (
         <div className="flex flex-col gap-3">
           <p className="text-sm font-medium text-slate-900">
-            Are you sure you want to log out?
+            Are you sure you want to sign out of your account?
           </p>
           <div className="flex justify-end gap-2">
             <button
@@ -22,7 +21,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
             </button>
             <button
               onClick={async () => {
-                toast.dismiss(t.id); // Dismiss confirmation toast
+                toast.dismiss(t.id);
                 try {
                   await signOut();
                   toast.success("Logged out successfully");
@@ -32,7 +31,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
               }}
               className="px-3 py-1.5 text-xs font-medium text-white bg-rose-600 hover:bg-rose-700 rounded-md transition-colors shadow-sm"
             >
-              Sign Out
+              Log Out
             </button>
           </div>
         </div>

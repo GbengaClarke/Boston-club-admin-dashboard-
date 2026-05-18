@@ -1,14 +1,14 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
 @import "tailwindcss";
 
 @theme {
-  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
-  --color-canvas: #F8FAFC;
-  --color-surface: #FFFFFF;
-  --color-ink: #0F172A;
-  --color-muted: #64748B;
-  --color-border: #E2E8F0;
-  --color-accent: #6366F1;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --color-canvas: #f8fafc;
+  --color-surface: #ffffff;
+  --color-ink: #0f172a;
+  --color-muted: #64748b;
+  --color-border: #e2e8f0;
+  --color-accent: #6366f1;
 }
 
 body {
@@ -29,4 +29,32 @@ body {
 
 .subtle-border {
   border: 1px solid var(--color-border);
+}
+
+.brd {
+  border: 1px solid red;
+}
+
+/* Minimalist scrollbar styling */
+.overflow-x-auto {
+  scrollbar-width: thin; /* For Firefox */
+  scrollbar-color: #cbd5e1 transparent; /* For Firefox */
+}
+
+/* For Chrome, Edge, and Safari */
+.overflow-x-auto::-webkit-scrollbar {
+  height: 1px; /* Slim height for horizontal scroll */
+}
+
+.overflow-x-auto::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.overflow-x-auto::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1; /* slate-300 */
+  border-radius: 20px;
+}
+
+.overflow-x-auto::-webkit-scrollbar-thumb:hover {
+  background-color: #94a3b8; /* slate-400 */
 }
