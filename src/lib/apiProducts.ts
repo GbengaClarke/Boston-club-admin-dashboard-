@@ -28,3 +28,14 @@ export const getProducts = async () => {
 
   return data;
 };
+
+export async function deleteProduct(id: string | number) {
+  const { data, error } = await supabase.from("products").delete().eq("id", id);
+
+  if (error) {
+    console.error(error);
+    throw new Error("Product could not be deleted");
+  }
+
+  return data;
+}
