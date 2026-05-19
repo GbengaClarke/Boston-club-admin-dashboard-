@@ -152,7 +152,7 @@ export function ProductDetailDrawer({ selectedProduct, onClose }: DrawerProps) {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         onClick={onClose}
-        className="fixed inset-0 bg-slate-900/20 backdrop-blur-sm z-40"
+        className="fixed inset-0  backdrop-blur-sm z-40"
       />
       <motion.div
         initial={{ x: "100%" }}
