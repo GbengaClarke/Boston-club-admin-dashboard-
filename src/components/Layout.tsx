@@ -39,7 +39,7 @@ export function Layout() {
         <Header onMenuClick={() => setSidebarOpen(true)} />
 
         <div className="flex-1 overflow-y-auto">
-          <main className="p-6 lg:p-8 max-w-7xl mx-auto flex flex-col gap-8">
+          <main className="py-6 px-4 lg:p-8 max-w-7xl mx-auto flex flex-col gap-8">
             <Outlet />
           </main>
         </div>
