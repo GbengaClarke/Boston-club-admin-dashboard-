@@ -93,6 +93,7 @@ export function ProductRow({
         >
           <button
             disabled={disabled}
+            // title="Edit"
             className="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Edit2 className="w-4 h-4" />
@@ -100,6 +101,7 @@ export function ProductRow({
 
           <button
             disabled={disabled}
+            // title="Delete"
             onClick={() => product.id && onDelete(product.id)}
             className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center min-w-[32px]"
           >

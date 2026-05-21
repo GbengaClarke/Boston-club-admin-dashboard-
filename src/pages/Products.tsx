@@ -80,7 +80,7 @@ export function Products() {
         </button>
       </div>
 
-      {showForm && <AddProductForm />}
+      {showForm && <AddProductForm setShowForm={setShowForm} />}
 
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
         <div className="overflow-x-auto">
