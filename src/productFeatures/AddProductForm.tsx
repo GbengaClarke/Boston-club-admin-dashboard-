@@ -435,7 +435,7 @@ function AddProductForm({ setShowForm }) {
 
               <option value="sandals">Sandals</option>
 
-              <option value="sneakers">Sneakers</option>
+              <option value="slides">Slides</option>
             </select>
           </div>
 
@@ -582,6 +582,9 @@ function AddProductForm({ setShowForm }) {
         <div className="flex items-center justify-end gap-3 pt-2">
           <button
             type="button"
+            onClick={() => {
+              setShowForm(false);
+            }}
             className="px-5 py-3 rounded-xl border border-slate-200 text-sm font-medium text-slate-600 hover:bg-slate-100 transition-all"
           >
             Cancel

@@ -102,7 +102,7 @@ export function Sidebar({ className }: { className?: string }) {
   const navItems = [
     { name: "Dashboard", path: "/", icon: LayoutDashboard },
     { name: "Products", path: "/products", icon: ShoppingBag },
-    { name: "Categories", path: "/categories", icon: FolderTree },
+    // { name: "Categories", path: "/categories", icon: FolderTree },
     { name: "Orders", path: "/orders", icon: ShoppingCart },
     { name: "Reviews", path: "/reviews", icon: MessageSquare },
     { name: "Customers", path: "/customers", icon: Users },

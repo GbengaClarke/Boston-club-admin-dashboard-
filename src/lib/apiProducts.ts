@@ -136,3 +136,94 @@ export async function addProduct(productData: AddProductInput) {
 
   return product;
 }
+
+export interface AddVariantPayload {
+  product_id: string;
+  color_name: string;
+  color_hex: string;
+  images: File[];
+}
+
+const uploadImage = async (file: File, productId: string) => {
+  const filePath = `${productId}/${Date.now()}-${file.name}`;
+
+  const { error } = await supabase.storage
+    .from("product-images")
+    .upload(filePath, file);
+
+  if (error) throw error;
+
+  const { data } = supabase.storage
+    .from("product-images")
+    .getPublicUrl(filePath);
+
+  return data.publicUrl;
+};
+
+export const addProductVariant = async (payload: AddVariantPayload) => {
+  const { product_id, color_name, color_hex, images } = payload;
+
+  const uploadedImages = await Promise.all(
+    images.map((file) => uploadImage(file, product_id))
+  );
+
+  const rows = uploadedImages.map((url, index) => ({
+    product_id,
+    image_url: url,
+    color_name,
+    color_hex,
+    is_main: index === 0, // first image = main
+  }));
+
+  const { data, error } = await supabase
+    .from("product_images")
+    .insert(rows)
+    .select();
+
+  if (error) throw error;
+
+  return data;
+};
+
+export async function deleteVariant({
+  product_id,
+  color_name,
+}: {
+  product_id: string;
+  color_name: string;
+}) {
+  // 1. Delete variant (all images of that color)
+  const { error: deleteError } = await supabase
+    .from("product_images")
+    .delete()
+    .eq("product_id", product_id)
+    .eq("color_name", color_name);
+
+  if (deleteError) throw deleteError;
+
+  // 2. Check if ANY variants remain
+  const { data: remaining, error: fetchError } = await supabase
+    .from("product_images")
+    .select("id")
+    .eq("product_id", product_id)
+    .limit(1);
+
+  if (fetchError) throw fetchError;
+
+  const hasNoVariants = !remaining || remaining.length === 0;
+
+  // 3. If none remain → delete product
+  if (hasNoVariants) {
+    const { error: productDeleteError } = await supabase
+      .from("products")
+      .delete()
+      .eq("id", product_id);
+
+    if (productDeleteError) throw productDeleteError;
+  }
+
+  return {
+    deletedVariant: true,
+    deletedProduct: hasNoVariants,
+  };
+}

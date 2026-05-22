@@ -10,6 +10,7 @@ import { useDeleteProduct } from "../productFeatures/useDeleteProduct";
 import { Modal } from "../ui/Modal";
 import { Pagination } from "../components/Pagination";
 import AddProductForm from "../productFeatures/AddProductForm";
+import AddVariantForm from "../productFeatures/AddVariantForm";
 
 const PAGE_SIZE = 10;
 
@@ -19,7 +20,7 @@ export function Products() {
   const [currentPage, setCurrentPage] = useState(1);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
-
+  const [isVariantModalOpen, setIsVariantModalOpen] = useState(false);
   const { isLoading, products = [] } = useGetProducts();
   const { isDeleting, deleteProduct: deleteMutation } = useDeleteProduct();
 
@@ -63,7 +64,10 @@ export function Products() {
             Boston Club Catalog
           </h1>
           <p className="text-sm text-slate-500">
-            Manage your premium footwear collection ({totalProducts} items)
+            Manage your premium footwear collection{" "}
+            <span className="font-bold">
+              {totalProducts ? `(${totalProducts} items)` : ""}
+            </span>
           </p>
         </div>
         <button
@@ -103,9 +107,24 @@ export function Products() {
                   onSelect={setSelectedProduct}
                   onDelete={() => deleteProduct(product)}
                   disabled={isDeleting}
+                  onAddVariant={(product) => {
+                    setSelectedProduct(product);
+                    setIsVariantModalOpen(true);
+                  }}
                 />
               ))}
             </tbody>
+
+            <Modal
+              isOpen={isVariantModalOpen}
+              onClose={() => setIsVariantModalOpen(false)}
+              title={`Add Variant - ${selectedProduct?.name}`}
+            >
+              <AddVariantForm
+                product={selectedProduct}
+                onClose={() => setIsVariantModalOpen(false)}
+              />
+            </Modal>
           </table>
 
           {totalProducts === 0 && !isLoading && (

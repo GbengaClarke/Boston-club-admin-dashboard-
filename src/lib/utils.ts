@@ -27,3 +27,18 @@ export const getCategoryStyles = (category: Category) => {
       return "bg-slate-50 text-slate-600 border-slate-100";
   }
 };
+
+export const formatCurrency = (
+  value: number | null | undefined,
+  showDecimals: boolean = false
+): string => {
+  if (value === null || value === undefined) return "₦0";
+
+  return new Intl.NumberFormat("en-NG", {
+    style: "currency",
+    currency: "NGN",
+    // Setting both to 0 keeps the UI clean for whole numbers
+    minimumFractionDigits: showDecimals ? 2 : 0,
+    maximumFractionDigits: 2,
+  }).format(value);
+};
