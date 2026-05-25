@@ -17,6 +17,8 @@ const PAGE_SIZE = 10;
 export function Products() {
   const [showForm, setShowForm] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [variantProduct, setVariantProduct] = useState<Product | null>(null);
+
   const [currentPage, setCurrentPage] = useState(1);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
@@ -54,6 +56,16 @@ export function Products() {
         toast.error(err.message || "Could not delete product");
       },
     });
+  };
+
+  // --- HANDLERS ---
+  const handleOpenDrawer = (product: Product) => {
+    setSelectedProduct(product);
+  };
+
+  const handleOpenAddVariant = (product: Product) => {
+    setVariantProduct(product);
+    setIsVariantModalOpen(true);
   };
 
   return (
@@ -104,18 +116,21 @@ export function Products() {
                 <ProductRow
                   key={product.id}
                   product={product}
-                  onSelect={setSelectedProduct}
                   onDelete={() => deleteProduct(product)}
                   disabled={isDeleting}
-                  onAddVariant={(product) => {
-                    setSelectedProduct(product);
-                    setIsVariantModalOpen(true);
-                  }}
+                  // onSelect={setSelectedProduct}
+                  // onAddVariant={(product) => {
+                  //   setSelectedProduct(product);
+                  //   setIsVariantModalOpen(true);
+                  // }}
+
+                  onSelect={handleOpenDrawer}
+                  onAddVariant={handleOpenAddVariant}
                 />
               ))}
             </tbody>
 
-            <Modal
+            {/* <Modal
               isOpen={isVariantModalOpen}
               onClose={() => setIsVariantModalOpen(false)}
               title={`Add Variant - ${selectedProduct?.name}`}
@@ -124,6 +139,26 @@ export function Products() {
                 product={selectedProduct}
                 onClose={() => setIsVariantModalOpen(false)}
               />
+            </Modal> */}
+
+            {/* RENDER ADD VARIANT MODAL */}
+            <Modal
+              isOpen={isVariantModalOpen}
+              onClose={() => {
+                setIsVariantModalOpen(false);
+                setVariantProduct(null);
+              }}
+              title={`Add Variant for ${variantProduct?.name || ""}`}
+            >
+              {variantProduct && (
+                <AddVariantForm
+                  product={variantProduct}
+                  onClose={() => {
+                    setIsVariantModalOpen(false);
+                    setVariantProduct(null);
+                  }}
+                />
+              )}
             </Modal>
           </table>
 
