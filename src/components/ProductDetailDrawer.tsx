@@ -1,13 +1,14 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, ShoppingBag, Sparkles, Trash2 } from "lucide-react";
 import { getMainImage, formatCurrency } from "../lib/utils";
 import { Product } from "../types/ProductTypes";
 import { useDeleteVariant } from "../productFeatures/useDeleteVariant";
 import { Modal } from "../ui/Modal";
-import { deleteProduct } from "../lib/apiProducts";
+// import { deleteProduct } from "../lib/apiProducts";
 import { LiaShoePrintsSolid } from "react-icons/lia";
 import { GiRolledCloth } from "react-icons/gi";
+import { useDeleteProduct } from "../productFeatures/useDeleteProduct";
 
 interface DrawerProps {
   selectedProduct: Product;
@@ -16,6 +17,7 @@ interface DrawerProps {
 
 export function ProductDetailDrawer({ selectedProduct, onClose }: DrawerProps) {
   const { mutate: deleteVariant, isPending } = useDeleteVariant();
+  const { isDeleting, deleteProduct } = useDeleteProduct();
 
   const [selectedColor, setSelectedColor] = useState<string | undefined>();
   const [variantToDelete, setVariantToDelete] = useState<string | null>(null);
@@ -23,30 +25,39 @@ export function ProductDetailDrawer({ selectedProduct, onClose }: DrawerProps) {
     null
   );
 
-  // 1. Logic for unique color variants (safeguarded against empty/null values)
+  // ✅ LOCAL STATE FOR INSTANT UI UPDATE
+  const [localImages, setLocalImages] = useState(
+    selectedProduct.product_images || []
+  );
+
+  useEffect(() => {
+    setLocalImages(selectedProduct.product_images || []);
+  }, [selectedProduct]);
+
+  // 1. Logic for unique color variants
   const colorVariants = useMemo(() => {
     const map = new Map<string, any>();
-    selectedProduct.product_images?.forEach((img) => {
-      // Fallback to a string if color_name is falsy or missing
+
+    localImages.forEach((img) => {
       const keyName = img.color_name || img.color_hex || "default-color";
       if (!map.has(keyName)) map.set(keyName, img);
     });
+
     return Array.from(map.values());
-  }, [selectedProduct.product_images]);
+  }, [localImages]);
 
   const activeColor =
     selectedColor ||
-    getMainImage(selectedProduct)?.color_name ||
+    getMainImage({
+      ...selectedProduct,
+      product_images: localImages,
+    })?.color_name ||
     colorVariants[0]?.color_name ||
     "";
 
   const displayImages = useMemo(() => {
-    return (
-      selectedProduct.product_images?.filter(
-        (img) => (img.color_name || "") === activeColor
-      ) || []
-    );
-  }, [activeColor, selectedProduct.product_images]);
+    return localImages.filter((img) => (img.color_name || "") === activeColor);
+  }, [activeColor, localImages]);
 
   const preview = displayImages[0]?.image_url;
 
@@ -57,11 +68,23 @@ export function ProductDetailDrawer({ selectedProduct, onClose }: DrawerProps) {
 
   const confirmDelete = async () => {
     if (!variantToDelete || !selectedProduct.id) return;
+
     if (deleteMode === "variant") {
       deleteVariant(
         { product_id: selectedProduct.id, color_name: variantToDelete },
         {
           onSuccess: () => {
+            // ✅ INSTANT UI UPDATE (NO REFRESH NEEDED)
+            const updatedImages = localImages.filter(
+              (img) => img.color_name !== variantToDelete
+            );
+
+            setLocalImages(updatedImages);
+
+            if (selectedColor === variantToDelete) {
+              setSelectedColor(updatedImages[0]?.color_name);
+            }
+
             setVariantToDelete(null);
             setDeleteMode(null);
           },
@@ -113,9 +136,9 @@ export function ProductDetailDrawer({ selectedProduct, onClose }: DrawerProps) {
           </button>
         </div>
 
-        {/* SCROLLABLE BODY */}
+        {/* BODY */}
         <div className="flex-1 mt-17 sm:mt-0 overflow-y-auto overflow-x-hidden p-6 space-y-8">
-          {/* PRIMARY IMAGE PREVIEW */}
+          {/* IMAGE */}
           <section>
             <div className="aspect-[4/5] bg-slate-50 rounded-2xl overflow-hidden relative border border-slate-100 group">
               {preview ? (
@@ -130,6 +153,7 @@ export function ProductDetailDrawer({ selectedProduct, onClose }: DrawerProps) {
                   <span className="text-sm">No image available</span>
                 </div>
               )}
+
               {selectedProduct.isNewArrival && (
                 <div className="absolute top-4 left-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full shadow-sm flex items-center gap-1.5 border border-amber-100">
                   <Sparkles className="w-3.5 h-3.5 text-amber-500" />
@@ -141,7 +165,7 @@ export function ProductDetailDrawer({ selectedProduct, onClose }: DrawerProps) {
             </div>
           </section>
 
-          {/* ESSENTIAL INFO */}
+          {/* INFO */}
           <section className="space-y-2">
             <div className="flex justify-between items-start gap-4">
               <h3 className="text-2xl font-extrabold text-slate-900 leading-tight flex-1">
@@ -171,14 +195,16 @@ export function ProductDetailDrawer({ selectedProduct, onClose }: DrawerProps) {
                 )}
               </div>
             </div>
+
             <div className="flex items-center gap-4 text-sm text-slate-500">
               <span className="flex items-center gap-1">
-                <LiaShoePrintsSolid className="w-4 h-4" />{" "}
+                <LiaShoePrintsSolid className="w-4 h-4" />
                 {selectedProduct.category}
               </span>
               <span className="w-1 h-1 rounded-full bg-slate-300" />
               <span className="flex items-center gap-1">
-                <GiRolledCloth className="w-4 h-4" /> {selectedProduct.material}
+                <GiRolledCloth className="w-4 h-4" />
+                {selectedProduct.material}
               </span>
             </div>
           </section>
@@ -193,7 +219,7 @@ export function ProductDetailDrawer({ selectedProduct, onClose }: DrawerProps) {
             </p>
           </section>
 
-          {/* VARIANT MANAGEMENT */}
+          {/* VARIANTS */}
           <section className="pb-10">
             <div className="flex items-center justify-between mb-4">
               <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest">
@@ -207,7 +233,6 @@ export function ProductDetailDrawer({ selectedProduct, onClose }: DrawerProps) {
 
             <div className="grid grid-cols-1 gap-3">
               {colorVariants.map((v, i) => {
-                // Guaranteed string keys to prevent React runtime warning errors
                 const itemKey = `variant-color-${
                   v.id || v.color_hex || "color"
                 }-${i}`;
@@ -256,7 +281,7 @@ export function ProductDetailDrawer({ selectedProduct, onClose }: DrawerProps) {
         </div>
       </motion.div>
 
-      {/* CONFIRMATION MODAL */}
+      {/* MODAL */}
       <Modal
         isOpen={!!variantToDelete}
         onClose={() => {
@@ -268,23 +293,25 @@ export function ProductDetailDrawer({ selectedProduct, onClose }: DrawerProps) {
         <div className="space-y-4 pt-2">
           <p className="text-sm text-slate-600 leading-relaxed">
             {deleteMode === "product"
-              ? "Warning: This is the last variant. Deleting it will remove the entire product catalog entry permanently."
-              : `Are you sure you want to remove the ${variantToDelete} variant? This action cannot be undone.`}
+              ? "Warning: This is the last variant. Deleting it will remove the entire product."
+              : `Are you sure you want to remove the ${variantToDelete} variant?`}
           </p>
+
           <div className="flex gap-3 pt-2">
             <button
               onClick={() => {
                 setVariantToDelete(null);
                 setDeleteMode(null);
               }}
-              className="flex-1 py-2.5 text-sm font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors"
+              className="flex-1 py-2.5 text-sm font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl"
             >
               Cancel
             </button>
+
             <button
               onClick={confirmDelete}
               disabled={isPending}
-              className="flex-1 py-2.5 text-sm font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl shadow-lg shadow-rose-200 transition-all disabled:opacity-50"
+              className="flex-1 py-2.5 text-sm font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl disabled:opacity-50"
             >
               {isPending ? "Processing..." : "Confirm Delete"}
             </button>

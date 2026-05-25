@@ -147,26 +147,6 @@ export function Products() {
         />
       </div>
 
-      {/* RENDER ADD VARIANT MODAL (Moved safely outside of table tags) */}
-      {/* <Modal
-        isOpen={isVariantModalOpen}
-        onClose={() => {
-          setIsVariantModalOpen(false);
-          setVariantProduct(null);
-        }}
-        title={`Add Variant for ${variantProduct?.name || ""}`}
-      >
-        {variantProduct && (
-          <AddVariantForm
-            product={variantProduct}
-            onClose={() => {
-              setIsVariantModalOpen(false);
-              setVariantProduct(null);
-            }}
-          />
-        )}
-      </Modal> */}
-
       <ModalForm
         isOpen={isVariantModalOpen}
         onClose={() => {
