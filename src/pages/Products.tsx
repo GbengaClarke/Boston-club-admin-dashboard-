@@ -11,6 +11,7 @@ import { Modal } from "../ui/Modal";
 import { Pagination } from "../components/Pagination";
 import AddProductForm from "../productFeatures/AddProductForm";
 import AddVariantForm from "../productFeatures/AddVariantForm";
+import ModalForm from "../components/ModalForm";
 
 const PAGE_SIZE = 10;
 
@@ -112,54 +113,20 @@ export function Products() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {paginatedProducts.map((product: Product) => (
+              {paginatedProducts.map((product: Product, index: number) => (
                 <ProductRow
-                  key={product.id}
+                  // key={product.id}
+                  key={
+                    product.id ? `prod-${product.id}` : `prod-fallback-${index}`
+                  }
                   product={product}
                   onDelete={() => deleteProduct(product)}
                   disabled={isDeleting}
-                  // onSelect={setSelectedProduct}
-                  // onAddVariant={(product) => {
-                  //   setSelectedProduct(product);
-                  //   setIsVariantModalOpen(true);
-                  // }}
-
                   onSelect={handleOpenDrawer}
                   onAddVariant={handleOpenAddVariant}
                 />
               ))}
             </tbody>
-
-            {/* <Modal
-              isOpen={isVariantModalOpen}
-              onClose={() => setIsVariantModalOpen(false)}
-              title={`Add Variant - ${selectedProduct?.name}`}
-            >
-              <AddVariantForm
-                product={selectedProduct}
-                onClose={() => setIsVariantModalOpen(false)}
-              />
-            </Modal> */}
-
-            {/* RENDER ADD VARIANT MODAL */}
-            <Modal
-              isOpen={isVariantModalOpen}
-              onClose={() => {
-                setIsVariantModalOpen(false);
-                setVariantProduct(null);
-              }}
-              title={`Add Variant for ${variantProduct?.name || ""}`}
-            >
-              {variantProduct && (
-                <AddVariantForm
-                  product={variantProduct}
-                  onClose={() => {
-                    setIsVariantModalOpen(false);
-                    setVariantProduct(null);
-                  }}
-                />
-              )}
-            </Modal>
           </table>
 
           {totalProducts === 0 && !isLoading && (
@@ -180,6 +147,47 @@ export function Products() {
         />
       </div>
 
+      {/* RENDER ADD VARIANT MODAL (Moved safely outside of table tags) */}
+      {/* <Modal
+        isOpen={isVariantModalOpen}
+        onClose={() => {
+          setIsVariantModalOpen(false);
+          setVariantProduct(null);
+        }}
+        title={`Add Variant for ${variantProduct?.name || ""}`}
+      >
+        {variantProduct && (
+          <AddVariantForm
+            product={variantProduct}
+            onClose={() => {
+              setIsVariantModalOpen(false);
+              setVariantProduct(null);
+            }}
+          />
+        )}
+      </Modal> */}
+
+      <ModalForm
+        isOpen={isVariantModalOpen}
+        onClose={() => {
+          setIsVariantModalOpen(false);
+          setVariantProduct(null);
+        }}
+        title="Add Variant"
+        badge={variantProduct?.name || ""}
+      >
+        {variantProduct && (
+          <AddVariantForm
+            product={variantProduct}
+            onClose={() => {
+              setIsVariantModalOpen(false);
+              setVariantProduct(null);
+            }}
+          />
+        )}
+      </ModalForm>
+
+      {/* DELETE MODAL */}
       <Modal
         isOpen={isDeleteModalOpen}
         onClose={() => !isDeleting && setIsDeleteModalOpen(false)}
@@ -210,9 +218,26 @@ export function Products() {
         </div>
       </Modal>
 
-      <AnimatePresence>
+      {/* SIDE PREVIEW DRAWER */}
+      {/* <AnimatePresence>
         {selectedProduct && (
           <ProductDetailDrawer
+            selectedProduct={selectedProduct}
+            onClose={() => setSelectedProduct(null)}
+          />
+        )}
+      </AnimatePresence> */}
+
+      {/* SIDE PREVIEW DRAWER */}
+      <AnimatePresence mode="wait">
+        {selectedProduct && (
+          <ProductDetailDrawer
+            // This eliminates the empty string "" identity collision
+            key={
+              selectedProduct.id
+                ? `drawer-${selectedProduct.id}`
+                : "drawer-active"
+            }
             selectedProduct={selectedProduct}
             onClose={() => setSelectedProduct(null)}
           />
