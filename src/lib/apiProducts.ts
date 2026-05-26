@@ -227,3 +227,138 @@ export async function deleteVariant({
     deletedProduct: hasNoVariants,
   };
 }
+
+// import { supabase } from "./supabase";
+// import { Product } from "../types/ProductTypes";
+
+export interface UpdateProductPayload {
+  productId: string;
+  name: string;
+  description: string;
+  regularPrice: number;
+  discount: number;
+  isNewArrival: boolean;
+  category: string;
+  material: string;
+  variantConfigurations: {
+    color_name: string;
+    color_hex: string;
+    mode: "keep" | "overwrite" | "append";
+    newFiles: File[];
+  }[];
+}
+
+export async function updateProductAndVariants(payload: UpdateProductPayload) {
+  const {
+    productId,
+    name,
+    description,
+    regularPrice,
+    discount,
+    isNewArrival,
+    category,
+    material,
+    variantConfigurations,
+  } = payload;
+
+  // ==========================================
+  // 1. UPDATE BASE PRODUCT DETAILS
+  // ==========================================
+  const { error: productUpdateError } = await supabase
+    .from("products")
+    .update({
+      name,
+      description,
+      regularPrice,
+      discount,
+      isNewArrival,
+      category,
+      material,
+    })
+    .eq("id", productId);
+
+  if (productUpdateError)
+    throw new Error(`Product update failed: ${productUpdateError.message}`);
+
+  // ==========================================
+  // 2. PROCESS VARIANTS SEQUENTIALLY
+  // ==========================================
+  for (const config of variantConfigurations) {
+    // Skip if user is keeping existing images and didn't add files
+    if (config.mode === "keep" || config.newFiles.length === 0) continue;
+
+    // OVERWRITE MODE: Delete existing files from storage & rows from table
+    if (config.mode === "overwrite") {
+      // Fetch target row fields to isolate storage file names
+      const { data: records } = await supabase
+        .from("product_images")
+        .select("image_url")
+        .eq("product_id", productId)
+        .eq("color_name", config.color_name);
+
+      if (records && records.length > 0) {
+        const filePaths = records
+          .map((r) => {
+            const parts = r.image_url.split("/product-images/");
+            return parts.length > 1 ? parts[1] : null;
+          })
+          .filter(Boolean) as string[];
+
+        if (filePaths.length > 0) {
+          await supabase.storage.from("product-images").remove(filePaths);
+        }
+      }
+
+      // Clear the rows
+      await supabase
+        .from("product_images")
+        .delete()
+        .eq("product_id", productId)
+        .eq("color_name", config.color_name);
+    }
+
+    // Upload new files to bucket storage path
+    const uploadedUrls = await Promise.all(
+      config.newFiles.map(async (file) => {
+        const filePath = `${productId}/${Date.now()}-${file.name}`;
+        const { error: uploadError } = await supabase.storage
+          .from("product-images")
+          .upload(filePath, file);
+
+        if (uploadError) throw uploadError;
+
+        const { data } = supabase.storage
+          .from("product-images")
+          .getPublicUrl(filePath);
+        return data.publicUrl;
+      })
+    );
+
+    // Check if the product has ANY main image left to prevent breaking table layouts
+    const { data: existingMain } = await supabase
+      .from("product_images")
+      .select("id")
+      .eq("product_id", productId)
+      .eq("is_main", true)
+      .limit(1);
+
+    const needsMainImage = !existingMain || existingMain.length === 0;
+
+    // Transform array to data rows
+    const rowsToInsert = uploadedUrls.map((url, index) => ({
+      product_id: productId,
+      image_url: url,
+      color_name: config.color_name,
+      color_hex: config.color_hex,
+      is_main: needsMainImage && index === 0,
+    }));
+
+    const { error: insertError } = await supabase
+      .from("product_images")
+      .insert(rowsToInsert);
+
+    if (insertError) throw insertError;
+  }
+
+  return { success: true };
+}
