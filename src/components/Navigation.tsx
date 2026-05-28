@@ -6,31 +6,50 @@
 //   MessageSquare,
 //   Users,
 //   FolderTree,
+//   Upload, // Added Upload icon
+//   Loader2, // Added Loader icon
 // } from "lucide-react";
 
 // import { GiSlippers } from "react-icons/gi";
 // import { cn } from "../lib/utils";
 // import { useLocation, Link } from "react-router-dom";
 // import { useAuth } from "../lib/auth";
+// import { useState } from "react"; // Added for loading state
+// import uploadBostonClubCatalog from "@/data/sample-data";
 
 // export function Sidebar({ className }: { className?: string }) {
 //   const location = useLocation();
 //   const { signOut } = useAuth();
 //   const active = location.pathname;
+//   const [isUploading, setIsUploading] = useState(false);
 
 //   const navItems = [
 //     { name: "Dashboard", path: "/", icon: LayoutDashboard },
 //     { name: "Products", path: "/products", icon: ShoppingBag },
-//     { name: "Categories", path: "/categories", icon: FolderTree },
+//     // { name: "Categories", path: "/categories", icon: FolderTree },
 //     { name: "Orders", path: "/orders", icon: ShoppingCart },
 //     { name: "Reviews", path: "/reviews", icon: MessageSquare },
 //     { name: "Customers", path: "/customers", icon: Users },
 //   ];
 
+//   const handleBatchUpload = async () => {
+//     if (!confirm("Are you sure you want to upload 20 dummy products?")) return;
+
+//     setIsUploading(true);
+//     try {
+//       await uploadBostonClubCatalog();
+//       alert("Products uploaded successfully!");
+//     } catch (error) {
+//       console.error(error);
+//       alert("Upload failed. Check console.");
+//     } finally {
+//       setIsUploading(false);
+//     }
+//   };
+
 //   return (
 //     <div
 //       className={cn(
-//         // Remove h-screen here so it doesn't conflict with the layout wrapper
 //         "flex flex-col w-64 border-r border-slate-800 bg-slate-900 text-sm font-medium",
 //         className
 //       )}
@@ -43,6 +62,23 @@
 //           Boston Club
 //         </div>
 //       </div>
+
+//       {/* --- New Upload Button --- */}
+//       <button
+//         onClick={handleBatchUpload}
+//         disabled={isUploading}
+//         className={cn(
+//           "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors mt-1",
+//           "text-slate-400 hover:text-emerald-400 hover:bg-slate-800 disabled:opacity-50"
+//         )}
+//       >
+//         {isUploading ? (
+//           <Loader2 className="w-4 h-4 animate-spin" />
+//         ) : (
+//           <Upload className="w-4 h-4" />
+//         )}
+//         {isUploading ? "Uploading..." : "Upload Seed Data"}
+//       </button>
 
 //       <div className="px-4 py-6 flex-1 flex flex-col gap-1">
 //         {navItems.map((item) => (
@@ -82,44 +118,68 @@ import {
   MessageSquare,
   Users,
   FolderTree,
-  Upload, // Added Upload icon
-  Loader2, // Added Loader icon
+  Upload,
+  Database, // Separator icon for distinction
+  Loader2,
 } from "lucide-react";
 
 import { GiSlippers } from "react-icons/gi";
 import { cn } from "../lib/utils";
 import { useLocation, Link } from "react-router-dom";
 import { useAuth } from "../lib/auth";
-import { useState } from "react"; // Added for loading state
-import uploadBostonClubCatalog from "@/data/sample-data";
+import { useState } from "react";
+import {
+  uploadBostonClubCatalog,
+  seedOrdersAndItems,
+} from "@/data/sample-data";
 
 export function Sidebar({ className }: { className?: string }) {
   const location = useLocation();
   const { signOut } = useAuth();
   const active = location.pathname;
-  const [isUploading, setIsUploading] = useState(false);
+  const [isUploadingProducts, setIsUploadingProducts] = useState(false);
+  const [isUploadingOrders, setIsUploadingOrders] = useState(false);
 
   const navItems = [
     { name: "Dashboard", path: "/", icon: LayoutDashboard },
     { name: "Products", path: "/products", icon: ShoppingBag },
-    // { name: "Categories", path: "/categories", icon: FolderTree },
     { name: "Orders", path: "/orders", icon: ShoppingCart },
     { name: "Reviews", path: "/reviews", icon: MessageSquare },
     { name: "Customers", path: "/customers", icon: Users },
   ];
 
-  const handleBatchUpload = async () => {
-    if (!confirm("Are you sure you want to upload 20 dummy products?")) return;
+  const handleCatalogReset = async () => {
+    if (!confirm("Wipe everything and regenerate 20 fresh products?")) return;
 
-    setIsUploading(true);
+    setIsUploadingProducts(true);
     try {
       await uploadBostonClubCatalog();
-      alert("Products uploaded successfully!");
-    } catch (error) {
+      alert("Catalog initialized successfully!");
+    } catch (error: any) {
       console.error(error);
-      alert("Upload failed. Check console.");
+      alert(`Initialization failed: ${error.message}`);
     } finally {
-      setIsUploading(false);
+      setIsUploadingProducts(false);
+    }
+  };
+
+  const handleOrdersReset = async () => {
+    if (
+      !confirm(
+        "Wipe database and seed 12 comprehensive orders with 30 combined order line items?"
+      )
+    )
+      return;
+
+    setIsUploadingOrders(true);
+    try {
+      await seedOrdersAndItems();
+      alert("Orders and structured line items loaded successfully!");
+    } catch (error: any) {
+      console.error(error);
+      alert(`Transactional data seeding issue: ${error.message}`);
+    } finally {
+      setIsUploadingOrders(false);
     }
   };
 
@@ -139,24 +199,45 @@ export function Sidebar({ className }: { className?: string }) {
         </div>
       </div>
 
-      {/* --- New Upload Button --- */}
-      <button
-        onClick={handleBatchUpload}
-        disabled={isUploading}
-        className={cn(
-          "flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors mt-1",
-          "text-slate-400 hover:text-emerald-400 hover:bg-slate-800 disabled:opacity-50"
-        )}
-      >
-        {isUploading ? (
-          <Loader2 className="w-4 h-4 animate-spin" />
-        ) : (
-          <Upload className="w-4 h-4" />
-        )}
-        {isUploading ? "Uploading..." : "Upload Seed Data"}
-      </button>
+      {/* --- Seeding Operations Group --- */}
+      <div className="px-4 pt-4 flex flex-col gap-1 border-b border-slate-800/60 pb-3">
+        <span className="text-[10px] uppercase tracking-wider text-slate-500 px-3 font-bold mb-1">
+          Database Seeding
+        </span>
 
-      <div className="px-4 py-6 flex-1 flex flex-col gap-1">
+        <button
+          onClick={handleCatalogReset}
+          disabled={isUploadingProducts || isUploadingOrders}
+          className="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:text-emerald-400 hover:bg-slate-800 transition-colors text-left disabled:opacity-50"
+        >
+          {isUploadingProducts ? (
+            <Loader2 className="w-4 h-4 animate-spin text-emerald-400" />
+          ) : (
+            <Upload className="w-4 h-4" />
+          )}
+          <span className="truncate">
+            {isUploadingProducts ? "Seeding..." : "Seed Clean Catalog"}
+          </span>
+        </button>
+
+        <button
+          onClick={handleOrdersReset}
+          disabled={isUploadingProducts || isUploadingOrders}
+          className="flex items-center gap-3 px-3 py-2 rounded-lg text-slate-400 hover:text-cyan-400 hover:bg-slate-800 transition-colors text-left disabled:opacity-50"
+        >
+          {isUploadingOrders ? (
+            <Loader2 className="w-4 h-4 animate-spin text-cyan-400" />
+          ) : (
+            <Database className="w-4 h-4" />
+          )}
+          <span className="truncate">
+            {isUploadingOrders ? "Processing..." : "Seed Orders Engine"}
+          </span>
+        </button>
+      </div>
+
+      {/* --- Main Navigation Layout --- */}
+      <div className="px-4 py-4 flex-1 flex flex-col gap-1">
         {navItems.map((item) => (
           <Link
             key={item.name}
