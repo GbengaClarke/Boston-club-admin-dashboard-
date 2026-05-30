@@ -1,222 +1,332 @@
-// import React, { useState, useEffect } from 'react';
-// import { supabase } from '../lib/supabase';
-// import { cn } from '../lib/utils';
-// import { motion } from 'motion/react';
-// import { Package, ExternalLink, CheckCircle2, XCircle } from 'lucide-react';
+// import { useState, useMemo } from "react";
+// import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+// import { ShoppingBag, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+// import { AnimatePresence } from "framer-motion";
+// import { Pagination } from "../components/Pagination";
+// import { OrderRow } from "../orderFeatures/OrderRow";
+// import { OrderDetailDrawer } from "../orderFeatures/OrderDetailDrawer";
 
-// const STATUSES = [
-//   'payment_pending',
-//   'order_confirmed',
-//   'production_in_progress',
-//   'ready_to_ship',
-//   'shipped',
-//   'delivered'
+// import toast from "react-hot-toast";
+// import {
+//   fetchOrdersApi,
+//   updateOrderStatusApi,
+//   updateOrderTrackingApi,
+// } from "../lib/apiOrders";
+
+// const PAGE_SIZE = 10;
+// export const STATUSES = [
+//   "pending",
+//   "paid",
+//   "processing",
+//   "shipped",
+//   "delivered",
+//   "cancelled",
+//   "refunded",
 // ];
 
+// type SortField = "order_number" | "total_price" | "created_at" | "status";
+// type SortDirection = "asc" | "desc";
+
 // export function Orders() {
-//   const [orders, setOrders] = useState<any[]>([]);
-//   const [loading, setLoading] = useState(true);
-//   const [statusFilter, setStatusFilter] = useState<string>('all');
+//   // const queryClient = useQueryClient();
+//   const [statusFilter, setStatusFilter] = useState<string>("all");
 
-//   const fetchOrders = async () => {
-//     setLoading(true);
-//     if (!supabase) return;
+//   const { allOrders, isLoading, error, updateStatus, updateTracking } =
+//     useOrders(statusFilter);
 
-//     let query = supabase
-//       .from('orders')
-//       .select('*, customers(full_name, email)')
-//       .order('created_at', { ascending: false });
+//   const [currentPage, setCurrentPage] = useState(1);
+//   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
 
-//     if (statusFilter !== 'all') {
-//       query = query.eq('status', statusFilter);
+//   const [sortBy, setSortBy] = useState<SortField>("created_at");
+//   const [sortOrder, setSortOrder] = useState<SortDirection>("desc");
+
+//   // Cache key maps strictly to the filtered collection segment
+//   const cacheQueryKey = ["orders", { statusFilter }];
+
+//   // --- ⚛️ REACT QUERY: GET BASE DATASET ---
+//   // const {
+//   //   data: allOrders = [],
+//   //   isLoading,
+//   //   error,
+//   // } = useQuery({
+//   //   queryKey: cacheQueryKey,
+//   //   queryFn: () => fetchOrdersApi({ statusFilter }),
+//   //   placeholderData: (previousData) => previousData,
+//   // });
+
+//   // --- 🧠 CLIENT-SIDE CACHE PROCESSING (ZERO DATABASE LATENCY) ---
+//   const processedOrders = useMemo(() => {
+//     const recordsCopy = [...allOrders];
+
+//     // Local Sorting Logic Engine
+//     recordsCopy.sort((a, b) => {
+//       let valueA = a[sortBy];
+//       let valueB = b[sortBy];
+
+//       // Safe fallback conversion for numeric sorting comparisons
+//       if (sortBy === "total_price" || sortBy === "order_number") {
+//         return sortOrder === "asc"
+//           ? Number(valueA) - Number(valueB)
+//           : Number(valueB) - Number(valueA);
+//       }
+
+//       // String and Date comparisons
+//       valueA = valueA ? String(valueA).toLowerCase() : "";
+//       valueB = valueB ? String(valueB).toLowerCase() : "";
+
+//       if (valueA < valueB) return sortOrder === "asc" ? -1 : 1;
+//       if (valueA > valueB) return sortOrder === "asc" ? 1 : -1;
+//       return 0;
+//     });
+
+//     return recordsCopy;
+//   }, [allOrders, sortBy, sortOrder]);
+
+//   // --- ⚡ INSTANT PAGINATION CALCULATION ---
+//   const totalOrders = processedOrders.length;
+//   const totalPages = Math.ceil(totalOrders / PAGE_SIZE);
+
+//   const paginatedOrders = useMemo(() => {
+//     const startIndex = (currentPage - 1) * PAGE_SIZE;
+//     return processedOrders.slice(startIndex, startIndex + PAGE_SIZE);
+//   }, [processedOrders, currentPage]);
+
+//   const selectedOrder = allOrders.find((o) => o.id === selectedOrderId) || null;
+
+//   // --- 🛠️ MUTATIONS WITH OPTIMISTIC REVALIDATION MAPS ---
+//   // const statusMutation = useMutation({
+//   //   mutationFn: updateOrderStatusApi,
+//   //   onMutate: async ({ id, status }) => {
+//   //     await queryClient.cancelQueries({ queryKey: cacheQueryKey });
+//   //     const previousOrdersData = queryClient.getQueryData(cacheQueryKey);
+
+//   //     queryClient.setQueryData(cacheQueryKey, (old: any) => {
+//   //       if (!old) return old;
+//   //       return old.map((order: any) =>
+//   //         order.id === id ? { ...order, status } : order
+//   //       );
+//   //     });
+
+//   //     return { previousOrdersData };
+//   //   },
+//   //   onError: (err: any, variables, context) => {
+//   //     if (context?.previousOrdersData) {
+//   //       queryClient.setQueryData(cacheQueryKey, context.previousOrdersData);
+//   //     }
+//   //     toast.error(err.message || "Failed to update status on server.");
+//   //   },
+//   //   onSuccess: () => {
+//   //     toast.success("Order status synchronized");
+//   //   },
+//   //   onSettled: () => {
+//   //     queryClient.invalidateQueries({ queryKey: cacheQueryKey });
+//   //   },
+//   // });
+
+//   // const trackingMutation = useMutation({
+//   //   mutationFn: updateOrderTrackingApi,
+//   //   onMutate: async ({ id, code }) => {
+//   //     await queryClient.cancelQueries({ queryKey: cacheQueryKey });
+//   //     const previousOrdersData = queryClient.getQueryData(cacheQueryKey);
+
+//   //     queryClient.setQueryData(cacheQueryKey, (old: any) => {
+//   //       if (!old) return old;
+//   //       return old.map((order: any) =>
+//   //         order.id === id
+//   //           ? { ...order, tracking_number: code, status: "shipped" }
+//   //           : order
+//   //       );
+//   //     });
+
+//   //     return { previousOrdersData };
+//   //   },
+//   //   onError: (err: any, variables, context) => {
+//   //     if (context?.previousOrdersData) {
+//   //       queryClient.setQueryData(cacheQueryKey, context.previousOrdersData);
+//   //     }
+//   //     toast.error(err.message || "Tracking registration encountered an issue.");
+//   //   },
+//   //   onSuccess: () => {
+//   //     toast.success("Tracking registered");
+//   //   },
+//   //   onSettled: () => {
+//   //     queryClient.invalidateQueries({ queryKey: cacheQueryKey });
+//   //   },
+//   // });
+
+//   // --- 🔀 DYNAMIC ACTIONS ---
+//   const handleSort = (field: SortField) => {
+//     if (sortBy === field) {
+//       setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
+//     } else {
+//       setSortBy(field);
+//       setSortOrder("desc");
 //     }
-
-//     const { data, error } = await query;
-//     if (error) console.error(error);
-//     if (data) setOrders(data);
-//     setLoading(false);
+//     setCurrentPage(1); // Return cleanly to frame index 1
 //   };
 
-//   useEffect(() => {
-//     fetchOrders();
-//   }, [statusFilter]);
-
-//   const updateStatus = async (id: string, newStatus: string) => {
-//     if (!supabase) return;
-//     const { error } = await supabase.from('orders').update({ status: newStatus }).eq('id', id);
-//     if (error) alert(error.message);
-//     fetchOrders();
+//   const handleFilterChange = (val: string) => {
+//     setStatusFilter(val);
+//     setCurrentPage(1);
 //   };
 
-//   const toggleVerification = async (id: string, currentStatus: boolean) => {
-//     if (!supabase) return;
-//     const { error } = await supabase
-//       .from('orders')
-//       .update({
-//         admin_verified: !currentStatus,
-//         paid_at: !currentStatus ? new Date().toISOString() : null
-//       })
-//       .eq('id', id);
-
-//     if (error) alert(error.message);
-//     fetchOrders();
+//   const handlePageChange = (newPage: number) => {
+//     setCurrentPage(newPage);
+//     window.scrollTo({ top: 0, behavior: "smooth" });
 //   };
+
+//   const renderSortIndicator = (field: SortField) => {
+//     if (sortBy !== field)
+//       return (
+//         <ArrowUpDown className="w-3 h-3 ml-1 text-slate-300 opacity-60 inline" />
+//       );
+//     return sortOrder === "asc" ? (
+//       <ArrowUp className="w-3 h-3 ml-1 text-indigo-500 inline" />
+//     ) : (
+//       <ArrowDown className="w-3 h-3 ml-1 text-indigo-500 inline" />
+//     );
+//   };
+
+//   if (error) {
+//     toast.error(
+//       (error as any).message ||
+//         "An unexpected error occurred during delivery data lookup."
+//     );
+//   }
 
 //   return (
-//     <div className="flex flex-col gap-6">
+//     <div className="relative flex flex-col gap-6 min-h-screen">
+//       {/* HEADER CONTROLS */}
 //       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
 //         <div>
-//           <h1 className="text-xl font-bold text-slate-800">Order Management</h1>
-//           <p className="text-sm text-slate-500">Manage manual payment verification and fulfillment</p>
+//           <h1 className="text-xl font-bold text-slate-800 tracking-tight">
+//             Order Management
+//           </h1>
+//           <p className="text-sm text-slate-500">
+//             Monitor fulfillment metrics, update logistics profiles, and track
+//             payments{" "}
+//             <span className="font-bold text-slate-700">
+//               {totalOrders ? `(${totalOrders} total matched)` : ""}
+//             </span>
+//           </p>
 //         </div>
-//         <div className="flex gap-2">
+//         <div className="flex gap-2 w-full sm:w-auto">
 //           <select
 //             value={statusFilter}
-//             onChange={(e) => setStatusFilter(e.target.value)}
-//             className="border-slate-200 rounded-lg text-sm bg-white"
+//             onChange={(e) => handleFilterChange(e.target.value)}
+//             className="w-full sm:w-auto border border-slate-200 rounded-lg text-xs bg-white py-2 px-3 font-medium text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500"
 //           >
-//             <option value="all">All Orders</option>
-//             {STATUSES.map(s => <option key={s} value={s}>{s.replace(/_/g, ' ')}</option>)}
+//             <option value="all">All Catalog Orders</option>
+//             {STATUSES.map((s) => (
+//               <option key={s} value={s}>
+//                 {s.toUpperCase()}
+//               </option>
+//             ))}
 //           </select>
 //         </div>
 //       </div>
 
-//       <div className="glass-card overflow-hidden">
-//         {loading ? (
-//           <div className="p-12 flex justify-center">
-//             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
-//           </div>
-//         ) : orders.length > 0 ? (
-//           <div className="overflow-x-auto">
-//             <table className="w-full text-left text-sm whitespace-nowrap">
-//               <thead className="bg-slate-50 text-slate-400 text-[10px] uppercase font-bold tracking-wider border-b border-slate-200">
-//                 <tr>
-//                   <th className="px-6 py-4">Reference</th>
-//                   <th className="px-6 py-4">Details</th>
-//                   <th className="px-6 py-4">Customer</th>
-//                   <th className="px-6 py-4">Verification</th>
-//                   <th className="px-6 py-4">Total</th>
-//                   <th className="px-6 py-4">Tracking</th>
-//                   <th className="px-6 py-4 text-center">Status</th>
-//                 </tr>
-//               </thead>
-//               <tbody className="divide-y divide-slate-100">
-//                 {orders.map((order) => (
-//                   <motion.tr
-//                     initial={{ opacity: 0 }}
-//                     animate={{ opacity: 1 }}
+//       {/* TABLE ELEMENT CONTAINER */}
+//       <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+//         <div className="overflow-x-auto">
+//           <table className="w-full text-left text-sm whitespace-nowrap">
+//             <thead className="bg-slate-50/50 text-slate-400 text-[10px] uppercase font-bold tracking-widest border-b border-slate-200">
+//               <tr>
+//                 <th
+//                   className="px-6 py-4 cursor-pointer hover:bg-slate-100/70 transition-colors"
+//                   onClick={() => handleSort("order_number")}
+//                 >
+//                   Reference {renderSortIndicator("order_number")}
+//                 </th>
+//                 <th className="px-6 py-4">Customer Details</th>
+//                 <th
+//                   className="px-6 py-4 cursor-pointer hover:bg-slate-100/70 transition-colors"
+//                   onClick={() => handleSort("total_price")}
+//                 >
+//                   Financial Total {renderSortIndicator("total_price")}
+//                 </th>
+//                 <th
+//                   className="px-6 py-4 cursor-pointer hover:bg-slate-100/70 transition-colors"
+//                   onClick={() => handleSort("created_at")}
+//                 >
+//                   Last Activity {renderSortIndicator("created_at")}
+//                 </th>
+//                 <th
+//                   className="px-6 py-4 cursor-pointer hover:bg-slate-100/70 text-center transition-colors"
+//                   onClick={() => handleSort("status")}
+//                 >
+//                   Pipeline Status {renderSortIndicator("status")}
+//                 </th>
+//               </tr>
+//             </thead>
+//             <tbody className="divide-y divide-slate-100">
+//               {!isLoading &&
+//                 paginatedOrders.map((order) => (
+//                   <OrderRow
 //                     key={order.id}
-//                     className="hover:bg-slate-50/50 transition-colors"
-//                   >
-//                     <td className="px-6 py-4 font-medium text-slate-900">
-//                       <div className="flex flex-col">
-//                         <span className="text-xs font-bold">{order.payment_reference || order.id.slice(0, 8)}</span>
-//                         <span className="text-[10px] text-slate-400 uppercase">{new Date(order.created_at).toLocaleDateString()}</span>
-//                       </div>
-//                     </td>
-//                     <td className="px-6 py-4">
-//                       <div className="flex flex-col gap-1 text-[10px]">
-//                         {order.whatsapp_reference && (
-//                           <a href={`https://wa.me/${order.whatsapp_reference}?text=Regarding order ${order.payment_reference}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-emerald-600 font-bold hover:underline">
-//                             <ExternalLink className="w-3 h-3" /> WhatsApp
-//                           </a>
-//                         )}
-//                         {order.payment_proof_url && (
-//                           <a href={order.payment_proof_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-indigo-600 font-bold hover:underline">
-//                             <ExternalLink className="w-3 h-3" /> Proof of Payment
-//                           </a>
-//                         )}
-//                         {!order.whatsapp_reference && !order.payment_proof_url && (
-//                           <span className="text-slate-400">No additional details</span>
-//                         )}
-//                       </div>
-//                     </td>
-//                     <td className="px-6 py-4">
-//                       <div className="flex flex-col">
-//                         <span className="text-slate-900 font-medium">{order.customers?.full_name || 'Anonymous'}</span>
-//                         <span className="text-xs text-slate-400">{order.customers?.email || order.customer_id}</span>
-//                       </div>
-//                     </td>
-//                     <td className="px-6 py-4">
-//                       <button
-//                         onClick={() => toggleVerification(order.id, order.admin_verified)}
-//                         className={cn(
-//                           "flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase transition-colors",
-//                           order.admin_verified
-//                             ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200"
-//                             : "bg-amber-100 text-amber-700 hover:bg-amber-200"
-//                         )}
-//                       >
-//                         {order.admin_verified ? (
-//                           <><CheckCircle2 className="w-3 h-3" /> Paid</>
-//                         ) : (
-//                           <><XCircle className="w-3 h-3" /> Pending</>
-//                         )}
-//                       </button>
-//                     </td>
-//                     <td className="px-6 py-4 font-bold text-slate-900">${order.total_amount?.toFixed(2)}</td>
-//                     <td className="px-6 py-4 text-slate-500 font-mono text-xs uppercase">
-//                       <div className="flex items-center gap-2">
-//                         {order.tracking_code || 'Pending...'}
-//                         <button
-//                           onClick={() => {
-//                             const newTracking = prompt('Enter new tracking code:', order.tracking_code || '');
-//                             if (newTracking !== null) {
-//                               supabase?.from('orders').update({ tracking_code: newTracking, status: 'shipped' }).eq('id', order.id).then(() => fetchOrders());
-//                             }
-//                           }}
-//                           className="text-indigo-600 hover:bg-indigo-50 p-1 rounded transition-colors"
-//                           title="Update Tracking"
-//                         >
-//                           <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
-//                         </button>
-//                       </div>
-//                     </td>
-//                     <td className="px-6 py-4 text-center">
-//                       <select
-//                         value={order.status}
-//                         onChange={(e) => updateStatus(order.id, e.target.value)}
-//                         className={cn(
-//                           "px-2 py-1 text-xs font-bold rounded-md uppercase border focus:outline-none appearance-none cursor-pointer w-40 text-center",
-//                           order.status === 'delivered' && "bg-emerald-50 text-emerald-600 border-emerald-100",
-//                           order.status === 'production_in_progress' && "bg-indigo-50 text-indigo-600 border-indigo-100",
-//                           (order.status === 'shipped' || order.status === 'ready_to_ship') && "bg-blue-50 text-blue-600 border-blue-100",
-//                           order.status === 'payment_pending' && "bg-rose-50 text-rose-600 border-rose-100",
-//                           order.status === 'order_confirmed' && "bg-slate-50 text-slate-600 border-slate-200"
-//                         )}
-//                       >
-//                         {STATUSES.map(s => (
-//                           <option key={s} value={s}>{s.replace(/_/g, ' ')}</option>
-//                         ))}
-//                       </select>
-//                     </td>
-//                   </motion.tr>
+//                     order={order}
+//                     onSelect={() => setSelectedOrderId(order.id)}
+//                     onStatusChange={(id, status) =>
+//                       statusMutation.mutate({ id, status })
+//                     }
+//                     onTrackingChange={(id, code) =>
+//                       trackingMutation.mutate({ id, code })
+//                     }
+//                   />
 //                 ))}
-//               </tbody>
-//             </table>
-//           </div>
-//         ) : (
-//           <div className="p-12 text-center flex flex-col items-center">
-//             <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 mb-4">
-//               <Package className="w-6 h-6" />
+//             </tbody>
+//           </table>
+
+//           {isLoading && (
+//             <div className="py-20 flex justify-center items-center">
+//               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
 //             </div>
-//             <h3 className="text-lg font-medium text-slate-900">No orders yet</h3>
-//             <p className="mt-1 text-sm text-slate-500">Orders from customers paying via bank transfer will appear here.</p>
-//           </div>
-//         )}
+//           )}
+
+//           {totalOrders === 0 && !isLoading && (
+//             <div className="py-20 text-center flex flex-col items-center justify-center">
+//               <ShoppingBag className="w-12 h-12 text-slate-200 mb-4" />
+//               <p className="text-slate-400 text-sm">
+//                 No recorded structural purchases match this parameter query.
+//               </p>
+//             </div>
+//           )}
+//         </div>
+
+//         {/* PAGINATION PANEL FOOTER */}
+//         <Pagination
+//           totalItems={totalOrders}
+//           pageSize={PAGE_SIZE}
+//           currentPage={currentPage}
+//           onPageChange={handlePageChange}
+//         />
 //       </div>
+
+//       {/* DETAILED OVERLAY PANEL DRAWER */}
+//       <AnimatePresence>
+//         {selectedOrder && (
+//           <OrderDetailDrawer
+//             order={selectedOrder}
+//             onClose={() => setSelectedOrderId(null)}
+//             onStatusChange={(id, status) =>
+//               statusMutation.mutate({ id, status })
+//             }
+//           />
+//         )}
+//       </AnimatePresence>
 //     </div>
 //   );
 // }
 
-import { useState, useEffect } from "react";
-import { Package, ShoppingBag } from "lucide-react";
+import { useState, useMemo } from "react";
 import { AnimatePresence } from "framer-motion";
-import { supabase } from "../lib/supabase";
+import { ShoppingBag, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { Pagination } from "../components/Pagination";
-import toast from "react-hot-toast";
 import { OrderRow } from "../orderFeatures/OrderRow";
 import { OrderDetailDrawer } from "../orderFeatures/OrderDetailDrawer";
+
+import toast from "react-hot-toast";
+import { useOrders } from "../orderFeatures/useOrders";
 
 const PAGE_SIZE = 10;
 export const STATUSES = [
@@ -229,95 +339,100 @@ export const STATUSES = [
   "refunded",
 ];
 
+type SortField = "order_number" | "total_price" | "created_at" | "status";
+type SortDirection = "asc" | "desc";
+
 export function Orders() {
-  const [orders, setOrders] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>("all");
+
+  // Hook handles our server interaction cleanly
+  const { allOrders, isLoading, error, updateStatus, updateTracking } =
+    useOrders(statusFilter);
+
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedOrder, setSelectedOrder] = useState<any | null>(null);
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
 
-  const fetchOrders = async () => {
-    setLoading(true);
-    if (!supabase) return;
+  const [sortBy, setSortBy] = useState<SortField>("created_at");
+  const [sortOrder, setSortOrder] = useState<SortDirection>("desc");
 
-    try {
-      let query = supabase
-        .from("orders")
-        .select("*, customers(full_name, email)")
-        .order("created_at", { ascending: false });
+  // --- 🧠 CLIENT-SIDE CACHE PROCESSING ---
+  const processedOrders = useMemo(() => {
+    const recordsCopy = [...allOrders];
 
-      if (statusFilter !== "all") {
-        query = query.eq("status", statusFilter);
+    recordsCopy.sort((a, b) => {
+      let valueA = a[sortBy];
+      let valueB = b[sortBy];
+
+      if (sortBy === "total_price" || sortBy === "order_number") {
+        return sortOrder === "asc"
+          ? Number(valueA) - Number(valueB)
+          : Number(valueB) - Number(valueA);
       }
 
-      const { data, error } = await query;
-      if (error) throw error;
-      if (data) setOrders(data);
-    } catch (err: any) {
-      toast.error(err.message || "Failed to fetch orders");
-    } finally {
-      setLoading(false);
+      valueA = valueA ? String(valueA).toLowerCase() : "";
+      valueB = valueB ? String(valueB).toLowerCase() : "";
+
+      if (valueA < valueB) return sortOrder === "asc" ? -1 : 1;
+      if (valueA > valueB) return sortOrder === "asc" ? 1 : -1;
+      return 0;
+    });
+
+    return recordsCopy;
+  }, [allOrders, sortBy, sortOrder]);
+
+  // --- ⚡ INSTANT PAGINATION CALCULATION ---
+  const totalOrders = processedOrders.length;
+
+  const paginatedOrders = useMemo(() => {
+    const startIndex = (currentPage - 1) * PAGE_SIZE;
+    return processedOrders.slice(startIndex, startIndex + PAGE_SIZE);
+  }, [processedOrders, currentPage]);
+
+  const selectedOrder = allOrders.find((o) => o.id === selectedOrderId) || null;
+
+  // --- 🔀 DYNAMIC ACTIONS ---
+  const handleSort = (field: SortField) => {
+    if (sortBy === field) {
+      setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
+    } else {
+      setSortBy(field);
+      setSortOrder("desc");
     }
+    setCurrentPage(1);
   };
 
-  useEffect(() => {
-    fetchOrders();
-    setCurrentPage(1); // Reset page on filter switch
-  }, [statusFilter]);
-
-  const handleStatusUpdate = async (id: string, newStatus: string) => {
-    if (!supabase) return;
-    try {
-      const { error } = await supabase
-        .from("orders")
-        .update({ status: newStatus })
-        .eq("id", id);
-
-      if (error) throw error;
-      toast.success("Order status updated");
-      fetchOrders();
-
-      // Keep selected drawer sync updated if open
-      if (selectedOrder?.id === id) {
-        setSelectedOrder((prev: any) => ({
-          ...prev,
-          status: newStatus,
-          updated_at: new Date().toISOString(),
-        }));
-      }
-    } catch (err: any) {
-      toast.error(err.message || "Could not update status");
-    }
+  const handleFilterChange = (val: string) => {
+    setStatusFilter(val);
+    setCurrentPage(1);
   };
-
-  const handleTrackingUpdate = async (id: string, code: string) => {
-    if (!supabase) return;
-    try {
-      const { error } = await supabase
-        .from("orders")
-        .update({ tracking_number: code, status: "shipped" })
-        .eq("id", id);
-
-      if (error) throw error;
-      toast.success("Tracking code attached");
-      fetchOrders();
-    } catch (err: any) {
-      toast.error(err.message || "Could not save tracking asset");
-    }
-  };
-
-  // --- PAGINATION PARAMETERS ---
-  const totalOrders = orders.length;
-  const startIndex = (currentPage - 1) * PAGE_SIZE;
-  const paginatedOrders = orders.slice(startIndex, startIndex + PAGE_SIZE);
 
   const handlePageChange = (newPage: number) => {
     setCurrentPage(newPage);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  const renderSortIndicator = (field: SortField) => {
+    if (sortBy !== field)
+      return (
+        <ArrowUpDown className="w-3 h-3 ml-1 text-slate-300 opacity-60 inline" />
+      );
+    return sortOrder === "asc" ? (
+      <ArrowUp className="w-3 h-3 ml-1 text-indigo-500 inline" />
+    ) : (
+      <ArrowDown className="w-3 h-3 ml-1 text-indigo-500 inline" />
+    );
+  };
+
+  if (error) {
+    toast.error(
+      (error as any).message ||
+        "An unexpected error occurred during delivery data lookup."
+    );
+  }
+
   return (
     <div className="relative flex flex-col gap-6 min-h-screen">
+      {/* HEADER CONTROLS */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl font-bold text-slate-800 tracking-tight">
@@ -327,14 +442,14 @@ export function Orders() {
             Monitor fulfillment metrics, update logistics profiles, and track
             payments{" "}
             <span className="font-bold text-slate-700">
-              {totalOrders ? `(${totalOrders} total)` : ""}
+              {totalOrders ? `(${totalOrders} total matched)` : ""}
             </span>
           </p>
         </div>
         <div className="flex gap-2 w-full sm:w-auto">
           <select
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
+            onChange={(e) => handleFilterChange(e.target.value)}
             className="w-full sm:w-auto border border-slate-200 rounded-lg text-xs bg-white py-2 px-3 font-medium text-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500"
           >
             <option value="all">All Catalog Orders</option>
@@ -347,40 +462,66 @@ export function Orders() {
         </div>
       </div>
 
+      {/* TABLE ELEMENT CONTAINER */}
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm whitespace-nowrap">
             <thead className="bg-slate-50/50 text-slate-400 text-[10px] uppercase font-bold tracking-widest border-b border-slate-200">
               <tr>
-                <th className="px-6 py-4">Reference</th>
+                <th
+                  className="px-6 py-4 cursor-pointer hover:bg-slate-100/70 transition-colors"
+                  onClick={() => handleSort("order_number")}
+                >
+                  Reference {renderSortIndicator("order_number")}
+                </th>
                 <th className="px-6 py-4">Customer Details</th>
-                <th className="px-6 py-4">Financial Total</th>
-                {/* <th className="px-6 py-4">Tracking Identifier</th> */}
-                <th className="px-6 py-4">Last Activity</th>
-                <th className="px-6 py-4 text-center">Pipeline Status</th>
+                <th
+                  className="px-6 py-4 cursor-pointer hover:bg-slate-100/70 transition-colors"
+                  onClick={() => handleSort("total_price")}
+                >
+                  Financial Total {renderSortIndicator("total_price")}
+                </th>
+                <th
+                  className="px-6 py-4 cursor-pointer hover:bg-slate-100/70 transition-colors"
+                  onClick={() => handleSort("created_at")}
+                >
+                  Last Activity {renderSortIndicator("created_at")}
+                </th>
+                <th
+                  className="px-6 py-4 cursor-pointer hover:bg-slate-100/70 text-center transition-colors"
+                  onClick={() => handleSort("status")}
+                >
+                  Pipeline Status {renderSortIndicator("status")}
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {!loading &&
+              {!isLoading &&
                 paginatedOrders.map((order) => (
                   <OrderRow
                     key={order.id}
                     order={order}
-                    onSelect={() => setSelectedOrder(order)}
-                    onStatusChange={handleStatusUpdate}
-                    onTrackingChange={handleTrackingUpdate}
+                    onSelect={() => setSelectedOrderId(order.id)}
+                    /* FIXED: Replaced statusMutation.mutate with updateStatus */
+                    onStatusChange={(id, status) =>
+                      updateStatus({ id, status })
+                    }
+                    /* FIXED: Replaced trackingMutation.mutate with updateTracking */
+                    onTrackingChange={(id, code) =>
+                      updateTracking({ id, code })
+                    }
                   />
                 ))}
             </tbody>
           </table>
 
-          {loading && (
+          {isLoading && (
             <div className="py-20 flex justify-center items-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
             </div>
           )}
 
-          {totalOrders === 0 && !loading && (
+          {totalOrders === 0 && !isLoading && (
             <div className="py-20 text-center flex flex-col items-center justify-center">
               <ShoppingBag className="w-12 h-12 text-slate-200 mb-4" />
               <p className="text-slate-400 text-sm">
@@ -390,6 +531,7 @@ export function Orders() {
           )}
         </div>
 
+        {/* PAGINATION PANEL FOOTER */}
         <Pagination
           totalItems={totalOrders}
           pageSize={PAGE_SIZE}
@@ -398,13 +540,14 @@ export function Orders() {
         />
       </div>
 
-      {/* COMPREHENSIVE HISTORIC DRAWER */}
+      {/* DETAILED OVERLAY PANEL DRAWER */}
       <AnimatePresence>
         {selectedOrder && (
           <OrderDetailDrawer
             order={selectedOrder}
-            onClose={() => setSelectedOrder(null)}
-            onStatusChange={handleStatusUpdate}
+            onClose={() => setSelectedOrderId(null)}
+            /* FIXED: Replaced statusMutation.mutate with updateStatus */
+            onStatusChange={(id, status) => updateStatus({ id, status })}
           />
         )}
       </AnimatePresence>
