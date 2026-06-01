@@ -78,3 +78,51 @@ export type CreateOrderInput = Omit<
   "id" | "order_number" | "created_at" | "updated_at"
 >;
 export type CreateOrderItemInput = Omit<OrderItem, "id" | "created_at">;
+
+export const STATUSES = [
+  "pending",
+  "paid",
+  "processing",
+  "shipped",
+  "delivered",
+  "cancelled",
+  "refunded",
+];
+
+export const ORDER_STATUS_CONFIG: Record<
+  OrderStatus,
+  { className: string; label: string }
+> = {
+  pending: {
+    className: "bg-amber-50 text-amber-700 border-amber-100 hover:bg-amber-100",
+    label: "Pending",
+  },
+  paid: {
+    className: "bg-blue-50 text-blue-700 border-blue-100 hover:bg-blue-100",
+    label: "Paid",
+  },
+  processing: {
+    className:
+      "bg-indigo-50 text-indigo-700 border-indigo-100 hover:bg-indigo-100",
+    label: "Processing",
+  },
+  shipped: {
+    className:
+      "bg-purple-50 text-purple-700 border-purple-100 hover:bg-purple-100",
+    label: "Shipped",
+  },
+  delivered: {
+    className:
+      "bg-emerald-50 text-emerald-700 border-emerald-100 hover:bg-emerald-100",
+    label: "Delivered",
+  },
+  cancelled: {
+    className: "bg-rose-50 text-rose-700 border-rose-100 hover:bg-rose-100",
+    label: "Cancelled",
+  },
+  refunded: {
+    className:
+      "bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200",
+    label: "Refunded",
+  },
+};

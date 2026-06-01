@@ -1,17 +1,12 @@
 // import { useState, useMemo } from "react";
-// import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-// import { ShoppingBag, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 // import { AnimatePresence } from "framer-motion";
+// import { ShoppingBag, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 // import { Pagination } from "../components/Pagination";
 // import { OrderRow } from "../orderFeatures/OrderRow";
 // import { OrderDetailDrawer } from "../orderFeatures/OrderDetailDrawer";
 
 // import toast from "react-hot-toast";
-// import {
-//   fetchOrdersApi,
-//   updateOrderStatusApi,
-//   updateOrderTrackingApi,
-// } from "../lib/apiOrders";
+// import { useOrders } from "../orderFeatures/useOrders";
 
 // const PAGE_SIZE = 10;
 // export const STATUSES = [
@@ -28,9 +23,9 @@
 // type SortDirection = "asc" | "desc";
 
 // export function Orders() {
-//   // const queryClient = useQueryClient();
 //   const [statusFilter, setStatusFilter] = useState<string>("all");
 
+//   // Hook handles our server interaction cleanly
 //   const { allOrders, isLoading, error, updateStatus, updateTracking } =
 //     useOrders(statusFilter);
 
@@ -40,37 +35,20 @@
 //   const [sortBy, setSortBy] = useState<SortField>("created_at");
 //   const [sortOrder, setSortOrder] = useState<SortDirection>("desc");
 
-//   // Cache key maps strictly to the filtered collection segment
-//   const cacheQueryKey = ["orders", { statusFilter }];
-
-//   // --- ⚛️ REACT QUERY: GET BASE DATASET ---
-//   // const {
-//   //   data: allOrders = [],
-//   //   isLoading,
-//   //   error,
-//   // } = useQuery({
-//   //   queryKey: cacheQueryKey,
-//   //   queryFn: () => fetchOrdersApi({ statusFilter }),
-//   //   placeholderData: (previousData) => previousData,
-//   // });
-
-//   // --- 🧠 CLIENT-SIDE CACHE PROCESSING (ZERO DATABASE LATENCY) ---
+//   // --- 🧠 CLIENT-SIDE CACHE PROCESSING ---
 //   const processedOrders = useMemo(() => {
 //     const recordsCopy = [...allOrders];
 
-//     // Local Sorting Logic Engine
 //     recordsCopy.sort((a, b) => {
 //       let valueA = a[sortBy];
 //       let valueB = b[sortBy];
 
-//       // Safe fallback conversion for numeric sorting comparisons
 //       if (sortBy === "total_price" || sortBy === "order_number") {
 //         return sortOrder === "asc"
 //           ? Number(valueA) - Number(valueB)
 //           : Number(valueB) - Number(valueA);
 //       }
 
-//       // String and Date comparisons
 //       valueA = valueA ? String(valueA).toLowerCase() : "";
 //       valueB = valueB ? String(valueB).toLowerCase() : "";
 
@@ -84,7 +62,6 @@
 
 //   // --- ⚡ INSTANT PAGINATION CALCULATION ---
 //   const totalOrders = processedOrders.length;
-//   const totalPages = Math.ceil(totalOrders / PAGE_SIZE);
 
 //   const paginatedOrders = useMemo(() => {
 //     const startIndex = (currentPage - 1) * PAGE_SIZE;
@@ -92,67 +69,6 @@
 //   }, [processedOrders, currentPage]);
 
 //   const selectedOrder = allOrders.find((o) => o.id === selectedOrderId) || null;
-
-//   // --- 🛠️ MUTATIONS WITH OPTIMISTIC REVALIDATION MAPS ---
-//   // const statusMutation = useMutation({
-//   //   mutationFn: updateOrderStatusApi,
-//   //   onMutate: async ({ id, status }) => {
-//   //     await queryClient.cancelQueries({ queryKey: cacheQueryKey });
-//   //     const previousOrdersData = queryClient.getQueryData(cacheQueryKey);
-
-//   //     queryClient.setQueryData(cacheQueryKey, (old: any) => {
-//   //       if (!old) return old;
-//   //       return old.map((order: any) =>
-//   //         order.id === id ? { ...order, status } : order
-//   //       );
-//   //     });
-
-//   //     return { previousOrdersData };
-//   //   },
-//   //   onError: (err: any, variables, context) => {
-//   //     if (context?.previousOrdersData) {
-//   //       queryClient.setQueryData(cacheQueryKey, context.previousOrdersData);
-//   //     }
-//   //     toast.error(err.message || "Failed to update status on server.");
-//   //   },
-//   //   onSuccess: () => {
-//   //     toast.success("Order status synchronized");
-//   //   },
-//   //   onSettled: () => {
-//   //     queryClient.invalidateQueries({ queryKey: cacheQueryKey });
-//   //   },
-//   // });
-
-//   // const trackingMutation = useMutation({
-//   //   mutationFn: updateOrderTrackingApi,
-//   //   onMutate: async ({ id, code }) => {
-//   //     await queryClient.cancelQueries({ queryKey: cacheQueryKey });
-//   //     const previousOrdersData = queryClient.getQueryData(cacheQueryKey);
-
-//   //     queryClient.setQueryData(cacheQueryKey, (old: any) => {
-//   //       if (!old) return old;
-//   //       return old.map((order: any) =>
-//   //         order.id === id
-//   //           ? { ...order, tracking_number: code, status: "shipped" }
-//   //           : order
-//   //       );
-//   //     });
-
-//   //     return { previousOrdersData };
-//   //   },
-//   //   onError: (err: any, variables, context) => {
-//   //     if (context?.previousOrdersData) {
-//   //       queryClient.setQueryData(cacheQueryKey, context.previousOrdersData);
-//   //     }
-//   //     toast.error(err.message || "Tracking registration encountered an issue.");
-//   //   },
-//   //   onSuccess: () => {
-//   //     toast.success("Tracking registered");
-//   //   },
-//   //   onSettled: () => {
-//   //     queryClient.invalidateQueries({ queryKey: cacheQueryKey });
-//   //   },
-//   // });
 
 //   // --- 🔀 DYNAMIC ACTIONS ---
 //   const handleSort = (field: SortField) => {
@@ -162,7 +78,7 @@
 //       setSortBy(field);
 //       setSortOrder("desc");
 //     }
-//     setCurrentPage(1); // Return cleanly to frame index 1
+//     setCurrentPage(1);
 //   };
 
 //   const handleFilterChange = (val: string) => {
@@ -265,12 +181,15 @@
 //                   <OrderRow
 //                     key={order.id}
 //                     order={order}
+//                     disabled={isLoading}
 //                     onSelect={() => setSelectedOrderId(order.id)}
+//                     /* FIXED: Replaced statusMutation.mutate with updateStatus */
 //                     onStatusChange={(id, status) =>
-//                       statusMutation.mutate({ id, status })
+//                       updateStatus({ id, status })
 //                     }
+//                     /* FIXED: Replaced trackingMutation.mutate with updateTracking */
 //                     onTrackingChange={(id, code) =>
-//                       trackingMutation.mutate({ id, code })
+//                       updateTracking({ id, code })
 //                     }
 //                   />
 //                 ))}
@@ -308,9 +227,8 @@
 //           <OrderDetailDrawer
 //             order={selectedOrder}
 //             onClose={() => setSelectedOrderId(null)}
-//             onStatusChange={(id, status) =>
-//               statusMutation.mutate({ id, status })
-//             }
+//             /* FIXED: Replaced statusMutation.mutate with updateStatus */
+//             onStatusChange={(id, status) => updateStatus({ id, status })}
 //           />
 //         )}
 //       </AnimatePresence>
@@ -329,6 +247,7 @@ import toast from "react-hot-toast";
 import { useOrders } from "../orderFeatures/useOrders";
 
 const PAGE_SIZE = 10;
+
 export const STATUSES = [
   "pending",
   "paid",
@@ -345,9 +264,13 @@ type SortDirection = "asc" | "desc";
 export function Orders() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
-  // Hook handles our server interaction cleanly
-  const { allOrders, isLoading, error, updateStatus, updateTracking } =
-    useOrders(statusFilter);
+  const {
+    allOrders = [],
+    isLoading,
+    error,
+    updateStatus,
+    updateTracking,
+  } = useOrders(statusFilter);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
@@ -355,7 +278,7 @@ export function Orders() {
   const [sortBy, setSortBy] = useState<SortField>("created_at");
   const [sortOrder, setSortOrder] = useState<SortDirection>("desc");
 
-  // --- 🧠 CLIENT-SIDE CACHE PROCESSING ---
+  // --- CLIENT-SIDE PROCESSING ---
   const processedOrders = useMemo(() => {
     const recordsCopy = [...allOrders];
 
@@ -380,7 +303,6 @@ export function Orders() {
     return recordsCopy;
   }, [allOrders, sortBy, sortOrder]);
 
-  // --- ⚡ INSTANT PAGINATION CALCULATION ---
   const totalOrders = processedOrders.length;
 
   const paginatedOrders = useMemo(() => {
@@ -390,7 +312,7 @@ export function Orders() {
 
   const selectedOrder = allOrders.find((o) => o.id === selectedOrderId) || null;
 
-  // --- 🔀 DYNAMIC ACTIONS ---
+  // --- METRIC ACTIONS ---
   const handleSort = (field: SortField) => {
     if (sortBy === field) {
       setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
@@ -501,12 +423,11 @@ export function Orders() {
                   <OrderRow
                     key={order.id}
                     order={order}
+                    disabled={isLoading}
                     onSelect={() => setSelectedOrderId(order.id)}
-                    /* FIXED: Replaced statusMutation.mutate with updateStatus */
                     onStatusChange={(id, status) =>
                       updateStatus({ id, status })
                     }
-                    /* FIXED: Replaced trackingMutation.mutate with updateTracking */
                     onTrackingChange={(id, code) =>
                       updateTracking({ id, code })
                     }
@@ -546,7 +467,6 @@ export function Orders() {
           <OrderDetailDrawer
             order={selectedOrder}
             onClose={() => setSelectedOrderId(null)}
-            /* FIXED: Replaced statusMutation.mutate with updateStatus */
             onStatusChange={(id, status) => updateStatus({ id, status })}
           />
         )}
