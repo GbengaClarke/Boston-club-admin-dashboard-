@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { motion } from "framer-motion";
 import {
   Star,
@@ -13,6 +12,8 @@ import { cn } from "../lib/utils";
 interface ReviewRowProps {
   review: any;
   disabled: boolean;
+  isExpanded: boolean; // Driven dynamically by lifted parent accordion logic
+  onToggleExpand: () => void; // Command up to central table mapping state
   onToggleDisplay: (id: string, currentStatus: boolean) => void;
   onInitiateDelete: (id: string) => void;
 }
@@ -20,13 +21,15 @@ interface ReviewRowProps {
 export function ReviewRow({
   review,
   disabled,
+  isExpanded,
+  onToggleExpand,
   onToggleDisplay,
   onInitiateDelete,
 }: ReviewRowProps) {
-  const [isExpanded, setIsExpanded] = useState(false);
-
   const commentText = review.comment || "";
   const isLongComment = commentText.length > 60;
+
+  // Render the whole text body if it passes the matching state evaluation
   const displayedComment =
     isExpanded || !isLongComment
       ? commentText
@@ -46,7 +49,7 @@ export function ReviewRow({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       className={cn(
-        "border-b border-slate-100 hover:bg-slate-50/50 transition-colors group",
+        "border-b border-slate-100 hover:bg-slate-50/5 transition-colors group",
         disabled && "opacity-40 pointer-events-none select-none"
       )}
     >
@@ -64,7 +67,7 @@ export function ReviewRow({
 
       {/* PRODUCT */}
       <td className="px-6 py-4 text-slate-700 font-medium whitespace-nowrap">
-        {review.product?.name || review.product_id}
+        {review.product_name || review.product?.name}
       </td>
 
       {/* RATING */}
@@ -82,23 +85,46 @@ export function ReviewRow({
         </div>
       </td>
 
-      {/* COLLAPSIBLE / EXPANDABLE COMMENT */}
-      <td className="px-6 py-4 text-slate-600 font-normal whitespace-normal max-w-md">
-        <div className="flex flex-col items-start gap-1">
-          <p className="italic text-slate-700">"{displayedComment}"</p>
+      {/* COMMENT */}
+      <td className="px-2  py-4 max-w-mdx min-w-80">
+        <div
+          // layout
+          // transition={{ duration: 0.25 }}
+          className={cn(
+            "rounded-xl transition-all duration-300",
+            isExpanded &&
+              "bg-gradient-to-br from-slate-50 to-white border border-slate-200 p-4 shadow-sm"
+          )}
+        >
+          <p
+            className={cn(
+              "text-slate-700 leading-relaxed break-words whitespace-normal",
+              isExpanded ? "text-sm font-normal" : "text-sm italic"
+            )}
+          >
+            "{displayedComment}"
+          </p>
+
           {isLongComment && (
             <button
               type="button"
-              onClick={() => setIsExpanded(!isExpanded)}
-              className="text-[11px] font-semibold text-indigo-600 hover:text-indigo-800 transition-colors flex items-center gap-0.5 mt-1"
+              onClick={onToggleExpand}
+              className={cn(
+                "mt-3 inline-flex items-center gap-1 text-xs font-semibold transition-colors",
+                isExpanded
+                  ? "text-slate-600 hover:text-slate-900"
+                  : "text-indigo-600 hover:text-indigo-800"
+              )}
             >
               {isExpanded ? (
                 <>
-                  Show less <ChevronUp className="w-3 h-3" />
+                  <ChevronUp className="w-3.5 h-3.5" />
+                  Collapse comment
                 </>
               ) : (
                 <>
-                  Read full comment <ChevronDown className="w-3 h-3" />
+                  <ChevronDown className="w-3.5 h-3.5" />
+                  Read full comment
                 </>
               )}
             </button>
@@ -114,7 +140,7 @@ export function ReviewRow({
       {/* ACTIONS */}
       <td className="px-6 py-4 text-right whitespace-nowrap">
         <div className="flex items-center justify-end gap-2">
-          {/* Toggle Visibility Switch Button */}
+          {/* TOGGLE VISIBILITY */}
           <button
             type="button"
             onClick={() => onToggleDisplay(review.id, !review.is_displayed)}
@@ -135,7 +161,7 @@ export function ReviewRow({
             )}
           </button>
 
-          {/* Delete Action Trigger */}
+          {/* DELETE */}
           <button
             type="button"
             onClick={() => onInitiateDelete(review.id)}
