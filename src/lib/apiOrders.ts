@@ -8,7 +8,8 @@ export const fetchOrdersApi = async ({ statusFilter }: FetchOrdersParams) => {
   if (!supabase) throw new Error("Supabase client is not initialized.");
 
   // Fetch all items belonging to the selected filter type to allow local cache mutations
-  let query = supabase.from("orders").select("*, customers(full_name, email)");
+  let query = supabase.from("orders").select("*, profiles(full_name, email)");
+  // let query = supabase.from("orders").select("*, customers(full_name, email)");
 
   if (statusFilter !== "all") {
     query = query.eq("status", statusFilter);

@@ -14,9 +14,9 @@ import { Products } from "./pages/Products";
 import { ProductDetails } from "./pages/ProductDetails";
 import { Orders } from "./pages/Orders";
 import { Reviews } from "./pages/Reviews";
-import { Customers } from "./pages/Customers";
-// import { Categories } from "./pages/Categories";
+import { Profiles } from "./pages/Profiles";
 import { Toaster } from "react-hot-toast";
+import AddAdmin from "./pages/AddAdmin";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { session } = useAuth();
@@ -58,10 +58,10 @@ export default function App() {
               <Route index element={<Dashboard />} />
               <Route path="products" element={<Products />} />
               <Route path="products/:id" element={<ProductDetails />} />
-              {/* <Route path="categories" element={<Categories />} /> */}
+              <Route path="addadmin" element={<AddAdmin />} />
               <Route path="orders" element={<Orders />} />
               <Route path="reviews" element={<Reviews />} />
-              <Route path="customers" element={<Customers />} />
+              <Route path="profiles" element={<Profiles />} />
             </Route>
           </Routes>
         </Router>

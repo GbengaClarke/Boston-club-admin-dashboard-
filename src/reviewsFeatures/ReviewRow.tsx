@@ -57,10 +57,10 @@ export function ReviewRow({
       <td className="px-6 py-4">
         <div className="flex flex-col">
           <span className="font-bold text-slate-900">
-            {review.customer?.full_name || "Anonymous User"}
+            {review.profile?.full_name || "Anonymous User"}
           </span>
           <span className="text-[11px] font-mono text-slate-400 mt-0.5">
-            {review.customer?.email || review.customer_id}
+            {review.profile?.email || review.customer_id}
           </span>
         </div>
       </td>

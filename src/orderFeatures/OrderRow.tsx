@@ -67,10 +67,10 @@ export function OrderRow({
       <td className="px-6 py-4">
         <div className="flex flex-col">
           <span className="font-semibold text-slate-800">
-            {order.customers?.full_name || "Anonymous Purchaser"}
+            {order.profiles?.full_name || "Anonymous Purchaser"}
           </span>
           <span className="text-[10px] text-slate-400 font-mono max-w-[180px] truncate">
-            {order.customers?.email || "No credential email tied"}
+            {order.profiles?.email || "No credential email tied"}
           </span>
         </div>
       </td>

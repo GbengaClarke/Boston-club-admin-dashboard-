@@ -122,6 +122,7 @@ import {
   Database, // Separator icon for distinction
   Loader2,
 } from "lucide-react";
+import { IoPersonAddOutline } from "react-icons/io5";
 
 import { GiSlippers } from "react-icons/gi";
 import { cn } from "../lib/utils";
@@ -145,7 +146,8 @@ export function Sidebar({ className }: { className?: string }) {
     { name: "Products", path: "/products", icon: ShoppingBag },
     { name: "Orders", path: "/orders", icon: ShoppingCart },
     { name: "Reviews", path: "/reviews", icon: MessageSquare },
-    { name: "Customers", path: "/customers", icon: Users },
+    { name: "Profiles", path: "/profiles", icon: Users },
+    { name: "Add Admin", path: "/addadmin", icon: IoPersonAddOutline },
   ];
 
   const handleCatalogReset = async () => {
