@@ -17,6 +17,7 @@ import { Reviews } from "./pages/Reviews";
 import { Profiles } from "./pages/Profiles";
 import { Toaster } from "react-hot-toast";
 import AddAdmin from "./pages/AddAdmin";
+import UpdatePassword from "./adminFeatures/UpdatePassword";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { session } = useAuth();
@@ -47,6 +48,7 @@ export default function App() {
         <Router>
           <Routes>
             <Route path="/login" element={<Login />} />
+            <Route path="update-password" element={<UpdatePassword />} />
             <Route
               path="/"
               element={
