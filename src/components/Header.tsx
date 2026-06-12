@@ -1,9 +1,15 @@
+// src/features/admins/Header.tsx
 import { Bell, Menu, Search, LogOut } from "lucide-react";
 import { useAuth } from "../lib/auth";
+
 import { toast } from "react-hot-toast";
+import { useCurrentUser } from "../adminFeatures/useCurrentUser";
+import { useQueryClient } from "@tanstack/react-query";
 
 export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
   const { signOut } = useAuth();
+  const queryClient = useQueryClient();
+  const { userProfile, isLoading } = useCurrentUser();
 
   const handleSignOut = () => {
     toast(
@@ -24,6 +30,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                 toast.dismiss(t.id);
                 try {
                   await signOut();
+                  queryClient.clear();
                   toast.success("Logged out successfully");
                 } catch (error) {
                   toast.error("Error signing out");
@@ -47,6 +54,13 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
       }
     );
   };
+
+  // Determine standard profile text indicators or fallback options dynamically
+  const displayName = userProfile?.full_name || "Admin User";
+  const displayRole = userProfile?.role || "Store Manager";
+  const displayAvatar =
+    userProfile?.image ||
+    `https://i.pravatar.cc/150?u=${userProfile?.id || "admin"}`;
 
   return (
     <header className="h-16 border-b border-slate-200 bg-white flex items-center justify-between px-6 sticky top-0 z-10 w-full">
@@ -78,14 +92,34 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
 
         <div className="flex items-center gap-3">
           <button className="flex items-center gap-3 hover:bg-slate-50 p-1 pr-3 rounded-full border border-transparent hover:border-slate-200 transition-all">
-            <div className="w-8 h-8 rounded-full bg-slate-200 overflow-hidden">
-              <img src="https://i.pravatar.cc/150?u=admin" alt="User" />
+            <div className="w-8 h-8 rounded-full bg-slate-200 overflow-hidden flex items-center justify-center">
+              {isLoading ? (
+                <div className="w-full h-full bg-slate-200 animate-pulse" />
+              ) : (
+                <img
+                  src={displayAvatar}
+                  alt="User Profile"
+                  className="w-full h-full object-cover"
+                />
+              )}
             </div>
+
             <div className="text-left hidden sm:block">
-              <div className="text-sm font-medium text-slate-900 line-clamp-1">
-                Admin User
-              </div>
-              <div className="text-xs text-slate-500">Store Manager</div>
+              {isLoading ? (
+                <div className="flex flex-col gap-1 w-24">
+                  <div className="h-3.5 bg-slate-200 rounded animate-pulse" />
+                  <div className="h-2.5 bg-slate-100 rounded animate-pulse w-16" />
+                </div>
+              ) : (
+                <>
+                  <div className="text-sm font-medium text-slate-900 line-clamp-1">
+                    {displayName}
+                  </div>
+                  <div className="text-xs text-slate-500 capitalize">
+                    {displayRole}
+                  </div>
+                </>
+              )}
             </div>
           </button>
 
