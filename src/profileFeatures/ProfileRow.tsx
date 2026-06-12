@@ -15,21 +15,25 @@ export function ProfileRow({ customer }: ProfileRowProps) {
       {/* CUSTOMER DETAILS */}
       <td className="px-6 py-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-sm">
-            {customer.full_name
-              ? customer.full_name.charAt(0).toUpperCase()
-              : "U"}
+          {/* DYNAMIC AVATAR CONTAINER */}
+          <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-sm overflow-hidden flex-shrink-0 ">
+            {customer.image ? (
+              <img
+                src={customer.image}
+                alt={`${customer.full_name || "User"}'s avatar`}
+                className="w-full h-full object-cover"
+              />
+            ) : customer.full_name ? (
+              customer.full_name.charAt(0).toUpperCase()
+            ) : (
+              "U"
+            )}
           </div>
+
           <div className="flex flex-col">
             <span className="font-bold text-slate-900">
               {customer.full_name || "Unnamed User"}
             </span>
-            {/* <span
-              className="text-xs text-slate-400 font-mono"
-              title={customer.id}
-            >
-              {customer.id.slice(0, 8)}...
-            </span> */}
           </div>
         </div>
       </td>
@@ -76,13 +80,6 @@ export function ProfileRow({ customer }: ProfileRowProps) {
           <div className="flex items-center gap-1.5">
             <Calendar className="w-3.5 h-3.5" />
             <span>{new Date(customer.created_at).toLocaleDateString()}</span>
-            {/* <span>
-              {new Date(customer.created_at).toLocaleDateString(undefined, {
-                month: "2-digit",
-                day: "2-digit",
-                year: "numeric",
-              })}
-            </span> */}
           </div>
           <span className="text-[10px] uppercase tracking-wider">
             {new Date(customer.created_at).toLocaleTimeString([], {

@@ -56,7 +56,7 @@ export function AddAdminForm() {
               disabled={isPending}
               onChange={(e) => setFullName(e.target.value)}
               placeholder="Olugbenga Michael"
-              className="w-full border border-slate-200 rounded-xl text-sm bg-white py-2 pl-10 pr-4 font-medium text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+              className="w-full border border-slate-200 rounded-xl  bg-white py-2 pl-10 pr-4 font-medium text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
             />
           </div>
         </div>
@@ -75,7 +75,7 @@ export function AddAdminForm() {
               disabled={isPending}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="michael@example.com"
-              className="w-full border border-slate-200 rounded-xl text-sm bg-white py-2 pl-10 pr-4 font-medium text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+              className="w-full border border-slate-200 rounded-xl  bg-white py-2 pl-10 pr-4 font-medium text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
             />
           </div>
         </div>
@@ -94,7 +94,7 @@ export function AddAdminForm() {
               disabled={isPending}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="09078978574"
-              className="w-full border border-slate-200 rounded-xl text-sm bg-white py-2 pl-10 pr-4 font-medium text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+              className="w-full border border-slate-200 rounded-xl  bg-white py-2 pl-10 pr-4 font-medium text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
             />
           </div>
         </div>
@@ -108,7 +108,7 @@ export function AddAdminForm() {
             value={role}
             disabled={isPending}
             onChange={(e) => setRole(e.target.value as "admin" | "customer")}
-            className="w-full border border-slate-200 rounded-xl text-sm bg-white py-2 px-3 font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
+            className="w-full border border-slate-200 rounded-xl  bg-white py-2 px-3 font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 disabled:opacity-50"
           >
             <option value="admin">Administrator (Full Dashboard Access)</option>
             <option value="customer">
