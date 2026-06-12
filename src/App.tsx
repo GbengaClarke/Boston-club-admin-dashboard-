@@ -18,6 +18,7 @@ import { Profiles } from "./pages/Profiles";
 import { Toaster } from "react-hot-toast";
 import AddAdmin from "./pages/AddAdmin";
 import UpdatePassword from "./adminFeatures/UpdatePassword";
+import { Settings } from "./pages/Settings";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { session } = useAuth();
@@ -64,6 +65,7 @@ export default function App() {
               <Route path="orders" element={<Orders />} />
               <Route path="reviews" element={<Reviews />} />
               <Route path="profiles" element={<Profiles />} />
+              <Route path="settings" element={<Settings />} />
             </Route>
           </Routes>
         </Router>
