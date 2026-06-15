@@ -1,44 +1,74 @@
-import { ArrowUpRight, ArrowDownRight, DollarSign, Users, ShoppingBag, Activity } from 'lucide-react';
-import { cn } from '../lib/utils';
-import { MOCK_DATA } from '../lib/supabase';
-import { useEffect, useState } from 'react';
+// src/components/StatCards.tsx
+import { DollarSign, ShoppingBag, Truck, AlertTriangle } from "lucide-react";
+import { formatCurrency } from "../lib/utils";
 
-export function StatCards() {
-  const [stats, setStats] = useState(MOCK_DATA.stats);
+interface StatCardsProps {
+  revenue: number;
+  aov: number;
+  pending: number;
+  cancellations: number;
+}
 
-  // In a real implementation with Supabase, we would fetch these:
-  // useEffect(() => {
-  //   fetchStats();
-  // }, []);
-
-  const icons = [DollarSign, Users, ShoppingBag, Activity];
+export function StatCards({
+  revenue,
+  aov,
+  pending,
+  cancellations,
+}: StatCardsProps) {
+  const metrics = [
+    {
+      title: "Gross Revenue",
+      value: formatCurrency(revenue, false),
+      icon: DollarSign,
+      color: "bg-emerald-50 text-emerald-600 border-emerald-100",
+    },
+    {
+      title: "Avg Order Value",
+      value: formatCurrency(aov, true),
+      icon: ShoppingBag,
+      color: "bg-blue-50 text-blue-600 border-blue-100",
+    },
+    {
+      title: "Fulfillment Queue",
+      value: `${pending} pending`,
+      icon: Truck,
+      color: "bg-indigo-50 text-indigo-600 border-indigo-100",
+    },
+    {
+      title: "Cancellation Rate",
+      value: `${cancellations.toFixed(1)}% ratio`,
+      icon: AlertTriangle,
+      color: "bg-rose-50 text-rose-700 border-rose-100",
+    },
+  ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-      {stats.map((stat, i) => {
-        const Icon = icons[i % icons.length];
-        return (
-          <div key={stat.label} className="glass-card p-6 flex flex-col gap-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-slate-500">{stat.label}</span>
-              <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
-                <Icon className="w-5 h-5" />
-              </div>
-            </div>
-            
-            <div className="flex flex-col gap-1">
-              <span className="text-2xl font-bold mt-1 text-slate-900">{stat.value}</span>
-              <div className={cn(
-                "flex items-center gap-1 text-xs font-bold mt-1",
-                stat.isPositive ? "text-emerald-500" : "text-rose-500"
-              )}>
-                {stat.isPositive ? <ArrowUpRight className="w-4 h-4" /> : <ArrowDownRight className="w-4 h-4" />}
-                {stat.trend}
-              </div>
-            </div>
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+      {metrics.map((card, i) => (
+        <div
+          key={i}
+          className="bg-white p-4 sm:p-5 rounded-xl border border-slate-200/80 shadow-sm flex items-start gap-4"
+        >
+          <div
+            className={`w-11 h-11 rounded-lg border flex items-center justify-center flex-shrink-0 ${card.color}`}
+          >
+            <card.icon className="w-5 h-5" />
           </div>
-        );
-      })}
+
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-medium text-slate-400 uppercase tracking-wider break-words">
+              {card.title}
+            </p>
+
+            <h3
+              className="mt-1 text-[clamp(0.95rem,2vw,1.125rem)] font-bold text-slate-900 break-words leading-tight select-all"
+              title={card.value}
+            >
+              {card.value}
+            </h3>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

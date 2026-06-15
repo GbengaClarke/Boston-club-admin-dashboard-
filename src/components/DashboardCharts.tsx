@@ -1,89 +1,101 @@
-import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { MOCK_DATA } from "../lib/supabase";
+interface ChartProps {
+  data?: { status: string; count: number }[];
+  categories?: { name: string; value: number }[];
+  materials?: { name: string; value: number }[];
+}
 
-export function RevenueChart() {
+export function RevenueChart({ data = [] }: { data: ChartProps["data"] }) {
+  const maxVal = Math.max(...data.map((d) => d.count), 1);
+
   return (
-    <div className="glass-card p-6 flex flex-col gap-6 col-span-1 lg:col-span-2 hidden sm:flex">
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="font-bold text-slate-800">Revenue Analytics</h3>
-          <p className="text-sm text-slate-500">Monthly revenue for the current year</p>
+    <div className="bg-white p-4 sm:p-5 rounded-xl border border-slate-200/80 shadow-sm lg:col-span-2">
+      <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4">
+        Order Operational Flow
+      </h3>
+
+      <div className="overflow-x-auto pb-2">
+        <div className="flex items-end gap-3 h-56 min-w-max">
+          {data.map((bar) => (
+            <div
+              key={bar.status}
+              className="flex flex-col items-center justify-end h-full"
+              style={{ width: "72px" }}
+            >
+              <span className="text-xs font-semibold text-slate-700 mb-2">
+                {bar.count}
+              </span>
+
+              <div
+                className="w-full bg-indigo-500 hover:bg-indigo-600 rounded-t-lg transition-all duration-500"
+                style={{
+                  height: `${(bar.count / maxVal) * 140}px`,
+                  minHeight: "8px",
+                }}
+              />
+
+              <span
+                className="mt-2 text-[11px] text-center text-slate-500 leading-tight"
+                title={bar.status}
+              >
+                {bar.status}
+              </span>
+            </div>
+          ))}
         </div>
-        <select className="bg-slate-50 border border-slate-200 text-slate-700 text-sm rounded-lg px-3 py-1.5 outline-none focus:ring-2 focus:ring-blue-500/20">
-          <option>This Year</option>
-          <option>Last Year</option>
-        </select>
-      </div>
-      
-      <div className="h-[300px] w-full mt-2">
-        <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={MOCK_DATA.revenueData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-            <defs>
-              <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#6366F1" stopOpacity={0.3}/>
-                <stop offset="95%" stopColor="#6366F1" stopOpacity={0}/>
-              </linearGradient>
-            </defs>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
-            <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748B' }} dy={10} />
-            <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#64748B' }} tickFormatter={(value) => `$${value/1000}k`} />
-            <Tooltip 
-              contentStyle={{ borderRadius: '12px', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}
-              itemStyle={{ color: '#0F172A', fontWeight: 600 }}
-              formatter={(value: number) => [`$${value.toLocaleString()}`, 'Revenue']}
-            />
-            <Area type="monotone" dataKey="value" stroke="#6366F1" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue)" />
-          </AreaChart>
-        </ResponsiveContainer>
       </div>
     </div>
   );
 }
 
-export function CategoryChart() {
-  const COLORS = ['#6366F1', '#10B981', '#F59E0B', '#8B5CF6'];
+export function CategoryChart({
+  categories = [],
+  materials = [],
+}: {
+  categories: ChartProps["categories"];
+  materials: ChartProps["materials"];
+}) {
+  const renderRow = (name: string, val: number, max: number, color: string) => (
+    <div key={name} className="space-y-1">
+      <div className="flex justify-between text-xs font-medium capitalize">
+        <span className="text-slate-600">{name}</span>
+        <span className="text-slate-900 font-bold">{val} units</span>
+      </div>
+      <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+        <div
+          className={`h-full rounded-full ${color}`}
+          style={{ width: `${(val / Math.max(max, 1)) * 100}%` }}
+        />
+      </div>
+    </div>
+  );
 
   return (
-    <div className="glass-card p-6 flex flex-col gap-6 col-span-1 hidden sm:flex">
-      <div>
-        <h3 className="font-bold text-slate-800">Sales by Category</h3>
-        <p className="text-sm text-slate-500">Distribution of sales volume</p>
+    <div className="bg-white p-5 rounded-xl border border-slate-200/80 shadow-sm flex flex-col justify-between gap-6">
+      <div className="space-y-3">
+        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+          Category Performance
+        </h3>
+        {categories.map((c) =>
+          renderRow(
+            c.name,
+            c.value,
+            Math.max(...categories.map((x) => x.value)),
+            "bg-indigo-600"
+          )
+        )}
       </div>
-      
-      <div className="h-[300px] w-full flex items-center justify-center relative">
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
-            <Pie
-              data={MOCK_DATA.salesByCategory}
-              innerRadius={80}
-              outerRadius={110}
-              paddingAngle={2}
-              dataKey="value"
-              stroke="none"
-            >
-              {MOCK_DATA.salesByCategory.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-              ))}
-            </Pie>
-            <Tooltip 
-              contentStyle={{ borderRadius: '12px', border: '1px solid #E2E8F0', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}
-            />
-          </PieChart>
-        </ResponsiveContainer>
-        {/* Center Text */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-          <span className="text-3xl font-semibold text-slate-900">1,200</span>
-          <span className="text-sm text-slate-500">Total Sales</span>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4 mt-2">
-        {MOCK_DATA.salesByCategory.map((item, index) => (
-          <div key={item.name} className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }}></div>
-            <span className="text-sm text-slate-600">{item.name}</span>
-          </div>
-        ))}
+      <div className="space-y-3 border-t border-slate-100 pt-4">
+        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+          Material Share
+        </h3>
+        {materials.map((m) =>
+          renderRow(
+            m.name,
+            m.value,
+            Math.max(...materials.map((x) => x.value)),
+            "bg-slate-800"
+          )
+        )}
       </div>
     </div>
   );
