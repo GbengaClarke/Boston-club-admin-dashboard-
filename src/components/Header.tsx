@@ -59,11 +59,6 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
   const displayRole = userProfile?.role || "Store Manager";
   const displayAvatar = userProfile?.image || "default-user.jpg";
 
-  // const displayAvatar =
-  //   userProfile?.image ||
-  //   "default-user.jpg" ||
-  //   `https://i.pravatar.cc/150?u=${userProfile?.id || "admin"}`;
-
   return (
     <header className="h-16 border-b border-slate-200 bg-white flex items-center justify-between px-6 sticky top-0 z-10 w-full">
       <div className="flex items-center gap-4">
@@ -74,18 +69,9 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
           <Menu className="w-5 h-5" />
         </button>
 
-        {/* <div className="relative hidden md:block">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-          <input
-            type="text"
-            placeholder="Search anything..."
-            className="pl-10 pr-4 py-2 bg-slate-100 border-none rounded-lg text-sm w-80 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all"
-          />
-        </div> */}
-
         <div className="flex items-center gap-6">
           {/* System Status */}
-          <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200/60 px-3 py-1.5 rounded-full">
+          <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-full">
             <span className="relative flex h-2 w-2">
               <span className="animate-pingx absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>

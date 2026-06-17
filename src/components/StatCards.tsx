@@ -1,7 +1,7 @@
 // src/components/StatCards.tsx
 import { DollarSign, ShoppingBag, Truck, AlertTriangle } from "lucide-react";
 import { formatCurrency } from "../lib/utils";
-
+import { PiMoneyWavyBold } from "react-icons/pi";
 interface StatCardsProps {
   revenue: number;
   aov: number;
@@ -18,8 +18,8 @@ export function StatCards({
   const metrics = [
     {
       title: "Gross Revenue",
-      value: formatCurrency(revenue, false),
-      icon: DollarSign,
+      value: formatCurrency(revenue, true),
+      icon: PiMoneyWavyBold,
       color: "bg-emerald-50 text-emerald-600 border-emerald-100",
     },
     {

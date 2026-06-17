@@ -1,13 +1,15 @@
-// src/components/SalesFlowChart.tsx
-import React from "react";
 import {
-  ArrowRight,
-  ArrowDown,
-  Wallet,
-  CheckCircle,
-  Hourglass,
-  XCircle,
-} from "lucide-react";
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+} from "recharts";
+
+import { CreditCard, ShieldCheck, AlertCircle } from "lucide-react";
 import { formatCurrency } from "../lib/utils";
 
 interface SalesFlowChartProps {
@@ -17,87 +19,167 @@ interface SalesFlowChartProps {
     heldInPipeline: number;
     lostVolume: number;
   };
+  daysRange: number;
 }
 
-export function SalesFlowChart({ flow }: SalesFlowChartProps) {
-  const segments = [
+export function SalesFlowChart({ flow, daysRange }: SalesFlowChartProps) {
+  // Convert our raw analytics flow keys into a structure Recharts can chart directly
+  const data = [
     {
-      label: "Gross Booked Volume",
-      amount: flow.grossBooked,
-      icon: Wallet,
-      color: "bg-slate-50 border-slate-200 text-slate-700 font-mono",
-    },
-    {
-      label: "Finalized Revenue",
-      amount: flow.finalizedRevenue,
-      icon: CheckCircle,
-      color: "bg-emerald-50 border-emerald-200 text-emerald-700",
-    },
-    {
-      label: "Held in Pipeline",
-      amount: flow.heldInPipeline,
-      icon: Hourglass,
-      color: "bg-amber-50 border-amber-200 text-amber-700",
-    },
-    {
-      label: "Lost Volume",
-      amount: flow.lostVolume,
-      icon: XCircle,
-      color: "bg-rose-50 border-rose-200 text-rose-700",
+      name: `Past ${daysRange} Days`,
+      "Cancelled/Lost": flow.lostVolume,
+      "Cleared Earnings": flow.finalizedRevenue,
+      "Held in Pipeline": flow.heldInPipeline,
     },
   ];
 
   return (
-    <div className="bg-white p-4 sm:p-5 rounded-xl border border-slate-200/80 shadow-sm space-y-4">
-      <div>
-        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-          Monetary Sales Flow
-        </h3>
-        <p className="text-[11px] text-slate-400 mt-0.5">
-          Financial health breakdown tracking Nigerian Naira flow from invoice
-          bookings to settlement.
-        </p>
+    <div className="bg-white p-6 rounded-xl border border-slate-200/80 shadow-sm space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        <div>
+          <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider">
+            Revenue Performance Pipeline
+          </h3>
+          <p className="text-xs text-slate-500 mt-0.5">
+            Visualization of how incoming booked invoice values filter into
+            finalized cash.
+          </p>
+        </div>
+        <div className="text-xs font-bold text-slate-400 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-lg select-all">
+          Gross Volume: {formatCurrency(flow.grossBooked, false)}
+        </div>
       </div>
 
-      <div className="flex flex-col lg:flex-row items-center justify-between gap-3 lg:gap-2 pt-2">
-        {segments.map((node, idx) => {
-          const isFirst = idx === 0;
-          return (
-            <React.Fragment key={node.label}>
-              {/* Connector from Gross Booked to the destination channels */}
-              {!isFirst && idx === 1 && (
-                <div className="flex items-center justify-center text-slate-300 flex-shrink-0 my-1 lg:my-0">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider hidden lg:block mr-2">
-                    Splits into →
-                  </span>
-                  <ArrowDown className="w-4 h-4 block lg:hidden text-slate-400" />
-                </div>
-              )}
-              {idx > 1 && (
-                <div className="flex items-center justify-center text-slate-300 flex-shrink-0 block lg:hidden">
-                  <ArrowDown className="w-4 h-4 text-slate-400" />
-                </div>
-              )}
+      {/* RECHARTS STACKED VISUALIZER CONTAINER */}
+      <div className="h-64 w-full">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart
+            data={data}
+            layout="vertical"
+            margin={{ top: 10, right: 10, left: -10, bottom: 10 }}
+          >
+            <CartesianGrid
+              strokeDasharray="3 3"
+              horizontal={false}
+              stroke="#F1F5F9"
+            />
+            <XAxis
+              type="number"
+              axisLine={false}
+              tickLine={false}
+              tick={{ fontSize: 11, fill: "#94A3B8" }}
+              tickFormatter={(value) => formatCurrency(value, false)}
+            />
+            <YAxis
+              type="category"
+              dataKey="name"
+              axisLine={false}
+              tickLine={false}
+              tick={{ fontSize: 12, fill: "#64748B", fontWeight: 600 }}
+            />
+            <Tooltip
+              contentStyle={{
+                borderRadius: "12px",
+                border: "1px solid #E2E8F0",
+                boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.05)",
+                fontSize: "12px",
+              }}
+              formatter={(value: number) => [formatCurrency(value, false)]}
+            />
+            <Legend
+              verticalAlign="top"
+              height={36}
+              iconSize={10}
+              iconType="circle"
+              wrapperStyle={{
+                fontSize: "11px",
+                fontWeight: 600,
+                color: "#475569",
+              }}
+            />
+            {/* Cleared Funds Stack Segment */}
+            <Bar
+              dataKey="Cleared Earnings"
+              stackId="revenue"
+              fill="#10B981"
+              radius={[0, 0, 0, 0]}
+              barSize={44}
+            />
+            {/* Pending Pipeline Stack Segment */}
+            <Bar
+              dataKey="Held in Pipeline"
+              stackId="revenue"
+              fill="#6366F1"
+              radius={[0, 0, 0, 0]}
+            />
+            {/* Cancelled/Lost Stack Segment */}
+            <Bar
+              dataKey="Cancelled/Lost"
+              stackId="revenue"
+              fill="#F43F5E"
+              radius={[0, 8, 8, 0]}
+            />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
 
-              <div
-                className={`w-full lg:flex-1 border p-4 rounded-xl flex lg:flex-col items-center justify-between lg:justify-center text-center gap-3 relative transition-all hover:shadow-sm ${node.color}`}
-              >
-                <div className="p-2 bg-white rounded-lg border border-inherit flex-shrink-0">
-                  <node.icon className="w-4 h-4" />
-                </div>
-                <div className="text-left lg:text-center min-w-0 flex-1 lg:flex-none">
-                  <p className="text-[10px] font-bold uppercase opacity-70 tracking-tight truncate">
-                    {node.label}
-                  </p>
-                  <h4 className="text-sm sm:text-base font-black mt-0.5 truncate select-all">
-                    {formatCurrency(node.amount, false)}
-                  </h4>
-                </div>
-              </div>
-            </React.Fragment>
-          );
-        })}
+      {/* METRIC CARD GRID INSERTS UNDER CHART */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 border-t border-slate-100 pt-4">
+        <div className="bg-emerald-50/50 border border-emerald-100 p-3 rounded-lg flex items-center gap-3">
+          <ShieldCheck className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+          <div className="min-w-0">
+            <span className="block text-[10px] font-bold uppercase tracking-wider text-emerald-600">
+              Cleared Cash
+            </span>
+            <span className="block text-sm font-extrabold text-slate-800 truncate select-all">
+              {formatCurrency(flow.finalizedRevenue, false)}
+            </span>
+          </div>
+        </div>
+
+        <div className="bg-indigo-50/50 border border-indigo-100 p-3 rounded-lg flex items-center gap-3">
+          <Hourglass className="w-5 h-5 text-indigo-600 flex-shrink-0" />
+          <div className="min-w-0">
+            <span className="block text-[10px] font-bold uppercase tracking-wider text-indigo-600">
+              Held in Transit
+            </span>
+            <span className="block text-sm font-extrabold text-slate-800 truncate select-all">
+              {formatCurrency(flow.heldInPipeline, false)}
+            </span>
+          </div>
+        </div>
+
+        <div className="bg-rose-50/50 border border-rose-100 p-3 rounded-lg flex items-center gap-3">
+          <AlertCircle className="w-5 h-5 text-rose-600 flex-shrink-0" />
+          <div className="min-w-0">
+            <span className="block text-[10px] font-bold uppercase tracking-wider text-rose-600">
+              Lost Earnings
+            </span>
+            <span className="block text-sm font-extrabold text-slate-800 truncate select-all">
+              {formatCurrency(flow.lostVolume, false)}
+            </span>
+          </div>
+        </div>
       </div>
     </div>
+  );
+}
+
+// Minimal auxiliary component matching icon mapping inside container helper layout grid
+function Hourglass(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth={2}
+      {...props}
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+      />
+    </svg>
   );
 }

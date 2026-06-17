@@ -1,4 +1,4 @@
-// src/features/lib/apiDashboard.ts
+
 import { supabase } from "./supabase";
 
 export interface DashboardStats {
@@ -9,6 +9,13 @@ export interface DashboardStats {
   categoryData: { name: string; value: number }[];
   materialData: { name: string; value: number }[];
   statusTimeline: { status: string; count: number }[];
+  timelineData: { name: string; value: number }[];
+  salesFlow: {
+    grossBooked: number;
+    finalizedRevenue: number;
+    heldInPipeline: number;
+    lostVolume: number;
+  };
   recentOrders: any[];
 }
 
@@ -35,10 +42,17 @@ export async function getDashboardAnalytics(daysRange: number): Promise<Dashboar
     .order("created_at", { ascending: false });
 
   if (orderError) throw orderError;
-  const orders = rawOrders || [];
+  const allOrders = rawOrders || [];
 
-  // 2. Localized Matrix Aggregations (Prevents multi-trip latency overhead)
-  let revenueAccumulator = 0;
+  // 2. Filter down the dataset before doing any calculations
+  const filteredOrders = allOrders.filter((order) => order.created_at >= cutoffString);
+
+  // 3. Reset metric accumulation vectors
+  let grossBooked = 0;
+  let finalizedRevenue = 0;
+  let heldInPipeline = 0;
+  let lostVolume = 0;
+  
   let validOrdersCount = 0;
   let activeFulfillmentCount = 0;
   let cancelledOrRefundedCount = 0;
@@ -47,47 +61,96 @@ export async function getDashboardAnalytics(daysRange: number): Promise<Dashboar
   const materialMap: Record<string, number> = { suede: 0, leather: 0 };
   const pipelineMap: Record<string, number> = {};
 
-  orders.forEach((order) => {
-    // Pipeline configuration counter
+  // Initialize chronological daily keys to prevent charting gaps
+  const timelineMap: Record<string, number> = {};
+  for (let i = daysRange - 1; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const label = d.toLocaleDateString("en-NG", { month: "short", day: "numeric" });
+    timelineMap[label] = 0;
+  }
+
+  // 4. Aggregate metrics solely on filtered items
+  filteredOrders.forEach((order) => {
+    const orderValue = Number(order.total_price) || 0;
+    grossBooked += orderValue;
+
+    // Track state pipelines
     pipelineMap[order.status] = (pipelineMap[order.status] || 0) + 1;
 
-    if (["pending", "paid", "processing", "shipped"].includes(order.status)) {
+    if (["delivered", "shipped"].includes(order.status)) {
+      finalizedRevenue += orderValue;
+    } else if (["pending", "paid", "processing"].includes(order.status)) {
+      heldInPipeline += orderValue;
       activeFulfillmentCount++;
+    } else if (["cancelled", "refunded"].includes(order.status)) {
+      lostVolume += orderValue;
+      cancelledOrRefundedCount++;
     }
 
-    if (["cancelled", "refunded"].includes(order.status)) {
-      cancelledOrRefundedCount++;
-    } else {
-      revenueAccumulator += order.total_price;
+    if (!["cancelled", "refunded"].includes(order.status)) {
       validOrdersCount++;
 
-      // Process product material/category segment distributions from line items
+      // Extract line product categorical details with normalization checks
       order.order_items?.forEach((item: any) => {
-        const prod = item.products;
+        // Safe check: Handles both plural (products) and singular (product) relations
+        const prod = item.products || item.product;
+        
         if (prod) {
-          if (prod.category in categoryMap) {
-            categoryMap[prod.category] += item.quantity;
+          const qty = Number(item.quantity) || 0;
+
+          // Normalize strings (e.g. "Clogs" -> "clogs", "sandal" -> "sandals")
+          let categoryKey = (prod.category || "").toLowerCase().trim();
+          if (categoryKey === "clog") categoryKey = "clogs";
+          if (categoryKey === "sandal") categoryKey = "sandals";
+          if (categoryKey === "slide") categoryKey = "slides";
+
+          let materialKey = (prod.material || "").toLowerCase().trim();
+          if (materialKey === "suedes") materialKey = "suede";
+          if (materialKey === "leathers") materialKey = "leather";
+
+          // FIXED: Accumulate the raw dynamic quantity count here, NOT raw monetary currency
+          if (categoryKey in categoryMap) {
+            categoryMap[categoryKey] += qty;
           }
-          if (prod.material in materialMap) {
-            materialMap[prod.material] += item.quantity;
+          if (materialKey in materialMap) {
+            materialMap[materialKey] += qty;
           }
         }
       });
+
+      // Populate timeline dataset
+      const dateLabel = new Date(order.created_at).toLocaleDateString("en-NG", {
+        month: "short",
+        day: "numeric",
+      });
+      if (dateLabel in timelineMap) {
+        timelineMap[dateLabel] += orderValue;
+      }
     }
   });
 
-  // 3. Filter orders to feed the time-windowed logs table
-  const filteredRecentOrders = orders.filter((o) => o.created_at >= cutoffString);
+  // Convert timeline maps into sorted chronological array structures
+  const timelineData = Object.entries(timelineMap).map(([name, value]) => ({
+    name,
+    value,
+  }));
+
+  const statusTimeline = Object.entries(pipelineMap).map(([status, count]) => ({
+    status,
+    count: count as number,
+  }));
 
   return {
-    totalRevenue: revenueAccumulator,
-    averageOrderValue: validOrdersCount > 0 ? revenueAccumulator / validOrdersCount : 0,
+    totalRevenue: finalizedRevenue,
+    averageOrderValue: validOrdersCount > 0 ? finalizedRevenue / validOrdersCount : 0,
     activeFulfillmentCount,
-    cancellationRate: orders.length > 0 ? (cancelledOrRefundedCount / orders.length) * 100 : 0,
+    cancellationRate: filteredOrders.length > 0 ? (cancelledOrRefundedCount / filteredOrders.length) * 100 : 0,
     categoryData: Object.entries(categoryMap).map(([name, value]) => ({ name, value })),
     materialData: Object.entries(materialMap).map(([name, value]) => ({ name, value })),
-    statusTimeline: Object.entries(pipelineMap).map(([status, count]) => ({ status, count })),
-    recentOrders: filteredRecentOrders,
+    statusTimeline,
+    timelineData,
+    salesFlow: { grossBooked, finalizedRevenue, heldInPipeline, lostVolume },
+    recentOrders: filteredOrders,
   };
 }
-

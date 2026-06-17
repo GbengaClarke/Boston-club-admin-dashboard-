@@ -28,7 +28,7 @@ export function Pagination({
           {Math.min(startIndex + pageSize, totalItems)}
         </span>{" "}
         of <span className="font-medium text-slate-700">{totalItems}</span>{" "}
-        products
+        records
       </p>
 
       <div className="flex items-center gap-2">

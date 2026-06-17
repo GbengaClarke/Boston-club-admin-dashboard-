@@ -3,6 +3,7 @@ import { Sidebar } from "./Navigation";
 import { useState } from "react";
 import { cn } from "../lib/utils";
 import { Header } from "./Header";
+import { Footer } from "./Footer";
 
 export function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -20,7 +21,10 @@ export function Layout() {
 
       {/* bigger screen Sidebar */}
       <div className="hidden md:block">
-        <Sidebar className="h-full" />
+        {/* <Sidebar className="h-full" />
+         */}
+
+        <Sidebar className="h-full" onClose={() => setSidebarOpen(false)} />
       </div>
 
       {/* smaller screen Sidebar */}
@@ -42,6 +46,8 @@ export function Layout() {
           <main className="py-6 px-4 lg:p-8 max-w-7xl mx-auto flex flex-col gap-8">
             <Outlet />
           </main>
+
+          <Footer />
         </div>
       </div>
     </div>
