@@ -28,7 +28,7 @@ export function Dashboard() {
         </div>
 
         {/* WINDOW RANGE CONTROLLERS */}
-        <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl self-start">
+        <div className="flex items-center gap-1 bg-slate-200 p-1 rounded-xl self-start">
           {[7, 30, 90].map((days) => (
             <button
               key={days}
@@ -88,7 +88,6 @@ export function Dashboard() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.15 }}
       >
-        {/* NEW MOUNT: Stacked Sales flow analysis mapped strictly to day filters */}
         <SalesFlowChart flow={analytics.salesFlow} daysRange={daysWindow} />
       </motion.div>
     </div>

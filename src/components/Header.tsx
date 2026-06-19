@@ -1,27 +1,27 @@
-import { Bell, Menu, Search, LogOut } from "lucide-react";
+import { Menu, LogOut } from "lucide-react";
 import { useAuth } from "../lib/auth";
 import { toast } from "react-hot-toast";
 import { useCurrentUser } from "../adminFeatures/useCurrentUser";
 import { useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom"; // Added routing
+import { useNavigate } from "react-router-dom";
 
 export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
   const { signOut } = useAuth();
   const queryClient = useQueryClient();
-  const navigate = useNavigate(); // Hook initialization
+  const navigate = useNavigate();
   const { userProfile, isLoading } = useCurrentUser();
 
   const handleSignOut = () => {
     toast(
       (t) => (
         <div className="flex flex-col gap-3">
-          <p className="text-sm font-medium text-slate-900">
+          <p className="text-sm font-medium text-white">
             Are you sure you want to sign out of your account?
           </p>
           <div className="flex justify-end gap-2">
             <button
               onClick={() => toast.dismiss(t.id)}
-              className="px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-md transition-colors"
+              className="px-3 py-1.5 text-xs font-medium text-slate-300 hover:bg-slate-700 hover:text-white rounded-md transition-colors"
             >
               Cancel
             </button>
@@ -49,7 +49,9 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
         style: {
           minWidth: "300px",
           padding: "16px",
-          border: "1px solid #e2e8f0",
+          background: "#1e293b",
+          color: "#fff",
+          border: "1px solid #334155",
         },
       }
     );
@@ -64,7 +66,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
       <div className="flex items-center gap-4">
         <button
           onClick={onMenuClick}
-          className="md:hidden text-slate-500 hover:text-slate-900"
+          className="md:hidden text-slate-500 cursor-pointer hover:text-slate-900"
         >
           <Menu className="w-5 h-5" />
         </button>
@@ -76,11 +78,13 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
               <span className="animate-pingx absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
             </span>
-            <span className="text-xs font-semibold text-emerald-700 uppercase tracking-wider">
+            <span className="text-xs  font-semibold text-emerald-700 uppercase tracking-wider">
               Store Live
             </span>
           </div>
         </div>
+
+        <div className="h-8 w-px hidden sm:block bg-slate-200 mx-1"></div>
 
         <div className="hidden sm:block">
           <p className="text-xs text-slate-400">
@@ -94,15 +98,12 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
       </div>
 
       <div className="flex items-center gap-2 sm:gap-4 text-slate-500">
-        <div className="h-8 w-px bg-slate-200 mx-1"></div>
-
         <div className="flex items-center gap-3">
-          {/* CRITICAL ROUTING REDIRECT TRIGGER COMPONENT BLOCK */}
           <button
-            onClick={() => navigate("/settings")} // Directs administrators to settings form layout
-            className="flex items-center gap-3 hover:bg-slate-50 p-1 pr-3 rounded-full border border-transparent hover:border-slate-200 transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            onClick={() => navigate("/settings")}
+            className="flex items-center gap-3 hover:bg-slate-50 p-1 pr-3 rounded-full border border-transparent cursor-pointer transition-all focus:bg-slate-100"
           >
-            <div className="w-8 h-8 rounded-full bg-slate-200 overflow-hidden flex items-center justify-center">
+            <div className="w-8 h-8 rounded-full ring-1 ring-slate-200/80 bg-slate-100 overflow-hidden flex items-center justify-center shrink-0">
               {isLoading ? (
                 <div className="w-full h-full bg-slate-200 animate-pulse" />
               ) : (
@@ -114,7 +115,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
               )}
             </div>
 
-            <div className="text-left hidden sm:block">
+            <div className="text-left hidden min-[480px]:block">
               {isLoading ? (
                 <div className="flex flex-col gap-1 w-24">
                   <div className="h-3.5 bg-slate-200 rounded animate-pulse" />
@@ -122,7 +123,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                 </div>
               ) : (
                 <>
-                  <div className="text-sm font-medium text-slate-900 line-clamp-1">
+                  <div className="text-sm font-medium text-slate-900 line-clamp-1 capitalize">
                     {displayName}
                   </div>
                   <div className="text-xs text-slate-500 capitalize">
@@ -135,7 +136,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
 
           <button
             onClick={handleSignOut}
-            className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-full transition-colors"
+            className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-full cursor-pointer transition-colors"
             title="Sign Out"
           >
             <LogOut className="w-5 h-5" />

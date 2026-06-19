@@ -97,7 +97,7 @@ export function Settings() {
                 Avatar Profile Image
               </label>
               <p className="text-xs text-slate-400">
-                Supports JPG, PNG or WEBP formats. Max 2MB recommended.
+                Supports JPG, PNG or WEBP formats. Max 4MB recommended.
               </p>
             </div>
 

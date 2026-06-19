@@ -1,11 +1,11 @@
-// src/features/lib/apiUser.ts
+
 import { supabase } from "./supabase";
 
 export interface UpdateProfilePayload {
   userId: string;
   fullName: string;
   avatarFile?: File | null;
-  oldPassword?: string; // Captures current credential factor
+  oldPassword?: string; 
   newPassword?: string;
 }
 
@@ -20,10 +20,10 @@ export async function updateCurrentUserProfile({
 
   let publicAvatarUrl: string | null = null;
 
-  // 1. Handle image binary upload to storage buckets if provided
+  // Handle image binary upload to storage buckets if provided
   if (avatarFile) {
     const fileExtension = avatarFile.name.split(".").pop();
-    const fileName = `${userId}-${Math.random().toString(36).slice(-5)}.${fileExtension}`;
+    const fileName = `${userId}.${fileExtension}`;
     const filePath = `avatars/${fileName}`;
 
     const { error: uploadError } = await supabase.storage
@@ -39,7 +39,7 @@ export async function updateCurrentUserProfile({
     publicAvatarUrl = publicUrlData.publicUrl;
   }
 
-  // 2. Perform metadata sync update inside public.profiles
+  // Perform metadata sync update inside public.profiles
   const updateFields: Record<string, any> = { full_name: fullName };
   if (publicAvatarUrl) updateFields.image = publicAvatarUrl;
 
@@ -50,7 +50,7 @@ export async function updateCurrentUserProfile({
 
   if (profileError) throw profileError;
 
-  // 3. SECURE PASSWORDS RE-AUTHENTICATION SEQUENCE
+  //  SECURE PASSWORDS RE-AUTHENTICATION SEQUENCE
   if (newPassword && newPassword.trim().length >= 6) {
     if (!oldPassword) {
       throw new Error("You must provide your current password to assign a new password.");

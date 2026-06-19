@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Calendar, Loader2, Info } from "lucide-react";
-import { Link } from "react-router-dom"; // Assumed router interface is available
+import { Link } from "react-router-dom";
 import { fetchOrdersApi } from "../lib/apiOrders";
 import { ORDER_STATUS_CONFIG, OrderStatus } from "../types/ProductTypes";
 import { formatCurrency } from "../lib/utils";
@@ -17,20 +17,15 @@ export function RecentOrders({ daysRange }: { daysRange: number }) {
   const cutoff = new Date();
   cutoff.setDate(cutoff.getDate() - daysRange);
 
-  // Filter the orders globally matching the current timeframe window
   const filteredOrders = orders.filter(
     (order: any) => new Date(order.created_at) >= cutoff
   );
 
-  // Pagination parameters
   const pageSize = 5;
   const totalItems = filteredOrders.length;
   const totalPages = Math.ceil(totalItems / pageSize);
-
-  // Purely clamp the page to ensure we never get stranded on an empty page when changing daysRange
   const activePage = Math.min(currentPage, Math.max(1, totalPages));
 
-  // Determine slice indices
   const startIndex = (activePage - 1) * pageSize;
   const paginatedOrders = filteredOrders.slice(
     startIndex,
@@ -38,38 +33,38 @@ export function RecentOrders({ daysRange }: { daysRange: number }) {
   );
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200/80 shadow-sm overflow-hidden flex flex-col">
+    <div className="bg-white rounded-xl border border-slate-200/90 shadow-sm overflow-hidden flex flex-col">
       {/* HEADER CONTROLS */}
       <div className="p-4 sm:p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+        <h3 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
           Recent Activity — Past {daysRange} Days
         </h3>
-        <span className="text-xs bg-slate-100 font-semibold px-2.5 py-0.5 text-slate-600 rounded-full self-start sm:self-auto">
+        <span className="text-xs bg-slate-100 font-bold px-2.5 py-0.5 text-slate-700 rounded-full self-start sm:self-auto">
           {totalItems} records
         </span>
       </div>
 
-      {/* ADVISORY INFO BANNER FOR ADVANCED INTERACTIONS */}
-      <div className="mx-4 sm:mx-5 mb-5 p-3.5 bg-indigo-50/50 border border-indigo-100/80 rounded-xl flex items-start gap-3">
-        <Info className="w-4 h-4 text-indigo-600 mt-0.5 flex-shrink-0" />
-        <p className="text-xs text-indigo-800/95 leading-relaxed">
+      {/* ADVISORY INFO BANNER */}
+      <div className="mx-4 sm:mx-5 mb-5 p-3.5 bg-indigo-50 border border-indigo-100 rounded-xl flex items-start gap-3">
+        <Info className="w-4 h-4 text-indigo-700 mt-0.5 flex-shrink-0" />
+        <p className="text-sm text-indigo-950 leading-relaxed">
           Need to manage, track, or modify these records? The full interactive
           registry with status transitions, sorting, and logistics controls is
           available on the{" "}
           <Link
             to="/orders"
-            className="font-bold underline hover:text-indigo-900 transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-500 rounded px-1"
+            className="font-bold underline text-indigo-700 hover:text-indigo-900 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded px-1 whitespace-nowrap"
           >
             Orders Page &rarr;
           </Link>
         </p>
       </div>
 
-      {/* SWIPE CONTAINER FOR TOUCH INFRASTRUCTURES */}
+      {/* TABLE DATA ENTRY ARCHITECTURE */}
       <div className="w-full overflow-x-auto scrolling-touch mt-2">
         <table className="w-full text-left border-collapse min-w-[600px] sm:min-w-0">
           <thead>
-            <tr className="bg-slate-50 text-slate-400 text-[10px] font-bold uppercase tracking-wider border-b border-slate-100">
+            <tr className="bg-slate-50 text-slate-900 text-[11px] font-extrabold uppercase tracking-wider border-b border-slate-200">
               <th className="px-4 sm:px-6 py-3">Order</th>
               <th className="px-4 sm:px-6 py-3">Customer</th>
               <th className="px-4 sm:px-6 py-3">Created</th>
@@ -88,7 +83,7 @@ export function RecentOrders({ daysRange }: { daysRange: number }) {
               <tr>
                 <td
                   colSpan={5}
-                  className="text-center py-8 text-slate-400 text-xs"
+                  className="text-center py-8 text-slate-600 text-sm font-medium"
                 >
                   No transactions match within this timeline parameter.
                 </td>
@@ -98,35 +93,38 @@ export function RecentOrders({ daysRange }: { daysRange: number }) {
                 const badge = ORDER_STATUS_CONFIG[
                   order.status as OrderStatus
                 ] || {
-                  className: "bg-slate-50 text-slate-600",
+                  className: "bg-slate-100 text-slate-700 border-slate-200",
                   label: order.status,
                 };
                 return (
-                  <tr key={order.id} className=" transition-colors">
+                  <tr
+                    key={order.id}
+                    className="hover:bg-slate-50/50 transition-colors"
+                  >
                     <td className="px-4 sm:px-6 py-3.5 font-mono font-bold text-slate-900 text-xs">
                       #BC-{order.order_number}
                     </td>
                     <td className="px-4 sm:px-6 py-3.5">
                       <div className="flex flex-col max-w-[180px] sm:max-w-none">
-                        <span className="font-semibold text-slate-800 text-xs truncate">
+                        <span className="font-semibold text-slate-900 text-sm truncate capitalize">
                           {order.profiles?.full_name || "Guest User"}
                         </span>
-                        <span className="text-[11px] text-slate-400 truncate">
+                        <span className="text-xs font-medium text-slate-600 truncate mt-0.5">
                           {order.profiles?.email || "No verified info"}
                         </span>
                       </div>
                     </td>
-                    <td className="px-4 sm:px-6 py-3.5 text-slate-500 text-xs whitespace-nowrap">
-                      <div className="flex items-center gap-1">
-                        <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                        <span>
+                    <td className="px-4 sm:px-6 py-3.5 text-slate-700 text-xs whitespace-nowrap">
+                      <div className="flex items-center gap-1.5">
+                        <Calendar className="w-3.5 h-3.5 text-slate-600" />
+                        <span className="font-medium">
                           {new Date(order.created_at).toLocaleDateString()}
                         </span>
                       </div>
                     </td>
                     <td className="px-4 sm:px-6 py-3.5 whitespace-nowrap">
                       <span
-                        className={`inline-flex items-center px-2 py-0.5 text-[10px] font-bold rounded-full border  ${badge.className}`}
+                        className={`inline-flex items-center px-2 py-0.5 text-[10px] font-bold rounded-full border ${badge.className}`}
                       >
                         {badge.label}
                       </span>
@@ -142,7 +140,6 @@ export function RecentOrders({ daysRange }: { daysRange: number }) {
         </table>
       </div>
 
-      {/* PAGINATION NAVIGATION ELEMENT */}
       <Pagination
         totalItems={totalItems}
         pageSize={pageSize}

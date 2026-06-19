@@ -1,5 +1,4 @@
-// src/components/StatCards.tsx
-import { DollarSign, ShoppingBag, Truck, AlertTriangle } from "lucide-react";
+import { ShoppingBag, Truck, AlertTriangle } from "lucide-react";
 import { formatCurrency } from "../lib/utils";
 import { PiMoneyWavyBold } from "react-icons/pi";
 interface StatCardsProps {
@@ -43,7 +42,7 @@ export function StatCards({
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+    <div className="grid grid-cols-1 min-[471px]:grid-cols-2 min-[1200px]:grid-cols-4 gap-4 sm:gap-5">
       {metrics.map((card, i) => (
         <div
           key={i}
@@ -56,7 +55,7 @@ export function StatCards({
           </div>
 
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-medium text-slate-400 uppercase tracking-wider break-words">
+            <p className="text-xs font-medium text-slate-500 uppercase tracking-wider break-words">
               {card.title}
             </p>
 

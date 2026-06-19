@@ -9,7 +9,7 @@ export function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="flex h-screen bg-slate-50 overflow-hidden text-slate-900 font-sans">
+    <div className="flex h-screen max-w-7xl mx-auto bg-slate-100 overflow-hidden text-slate-900 font-sans">
       {/* Mobile Sidebar overlay */}
       <div
         className={cn(
@@ -21,9 +21,6 @@ export function Layout() {
 
       {/* bigger screen Sidebar */}
       <div className="hidden md:block">
-        {/* <Sidebar className="h-full" />
-         */}
-
         <Sidebar className="h-full" onClose={() => setSidebarOpen(false)} />
       </div>
 
@@ -35,7 +32,7 @@ export function Layout() {
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
-        <Sidebar className="h-full" />
+        <Sidebar className="h-full" onClose={() => setSidebarOpen(false)} />
       </div>
 
       {/* Main Content */}
