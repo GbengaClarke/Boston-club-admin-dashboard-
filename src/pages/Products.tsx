@@ -123,21 +123,30 @@ export function Products() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {paginatedProducts.map((product: Product, index: number) => (
-                <ProductRow
-                  key={
-                    product.id ? `prod-${product.id}` : `prod-fallback-${index}`
-                  }
-                  product={product}
-                  onDelete={() => deleteProduct(product)}
-                  disabled={isDeleting}
-                  onSelect={handleOpenDrawer}
-                  onAddVariant={handleOpenAddVariant}
-                  onEdit={handleOpenEdit}
-                />
-              ))}
+              {!isLoading &&
+                paginatedProducts.map((product: Product, index: number) => (
+                  <ProductRow
+                    key={
+                      product.id
+                        ? `prod-${product.id}`
+                        : `prod-fallback-${index}`
+                    }
+                    product={product}
+                    onDelete={() => deleteProduct(product)}
+                    disabled={isDeleting}
+                    onSelect={handleOpenDrawer}
+                    onAddVariant={handleOpenAddVariant}
+                    onEdit={handleOpenEdit}
+                  />
+                ))}
             </tbody>
           </table>
+
+          {isLoading && (
+            <div className="py-20 flex justify-center items-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+            </div>
+          )}
 
           {totalProducts === 0 && !isLoading && (
             <div className="py-20 text-center">
