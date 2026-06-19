@@ -87,7 +87,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
         <div className="h-8 w-px hidden sm:block bg-slate-200 mx-1"></div>
 
         <div className="hidden sm:block">
-          <p className="text-xs text-slate-400">
+          <p className="text-xs text-slate-500">
             {new Date().toLocaleDateString("en-US", {
               weekday: "long",
               month: "short",

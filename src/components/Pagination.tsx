@@ -20,7 +20,7 @@ export function Pagination({
   const startIndex = (currentPage - 1) * pageSize;
 
   return (
-    <div className="px-6 py-4 bg-slate-50/50 border-t border-slate-200 flex items-center justify-between">
+    <div className="px-6 py-4 gap-2 bg-slate-50/50 border-t border-slate-200 flex items-center justify-between">
       <p className="text-xs text-slate-500">
         Showing{" "}
         <span className="font-medium text-slate-700">{startIndex + 1}</span> to{" "}

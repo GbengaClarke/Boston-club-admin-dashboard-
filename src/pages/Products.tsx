@@ -81,18 +81,19 @@ export function Products() {
 
   return (
     <div className="relative flex flex-col gap-6 min-h-screen">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center gap-5 justify-between">
         <div>
           <h1 className="text-xl font-bold text-slate-800 tracking-tight">
             Boston Club Catalog
           </h1>
           <p className="text-sm text-slate-500">
             Manage your premium footwear collection{" "}
-            <span className="font-bold">
+            <span className="font-bold text-slate-700">
               {totalProducts ? `(${totalProducts} items)` : ""}
             </span>
           </p>
         </div>
+
         <button
           onClick={() => setShowForm(!showForm)}
           className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-all shadow-sm text-sm font-medium"
@@ -112,7 +113,7 @@ export function Products() {
       <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm whitespace-nowrap">
-            <thead className="bg-slate-50/50 text-slate-400 text-[10px] uppercase font-bold tracking-widest border-b border-slate-200">
+            <thead className="bg-slate-50 text-slate-900 text-[11px] font-extrabold uppercase tracking-wider border-b border-slate-200">
               <tr>
                 <th className="px-6 py-4">Preview</th>
                 <th className="px-6 py-4">Product Details</th>
