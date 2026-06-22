@@ -31,13 +31,10 @@ export default function ModalForm({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4  backdrop-blur-sm animate-fade-in">
-      {/* Backdrop Click Dismissal Layer */}
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4  backdrop-blur-sm bg-slate-900/70 animate-fade-in">
       <div className="absolute inset-0" onClick={onClose} />
 
-      {/* Main Structural Dialog Canvas */}
       <div className="relative w-full max-w-xl bg-white rounded-2xl shadow-xl border border-slate-100 flex flex-col my-4 max-h-[85vh] md:max-h-[88vh] overflow-hidden transform transition-all duration-300 scale-100">
-        {/* STRUCTURAL HEADER WRAPPER */}
         <div className="flex items-start justify-between border-b border-slate-100 p-5 shrink-0 bg-white">
           <div>
             <h3 className="text-sm font-bold text-slate-900 tracking-tight">
@@ -60,7 +57,6 @@ export default function ModalForm({
           </div>
         </div>
 
-        {/* INJECTED FORM CONTENT BODY TRACK */}
         <div className="flex-1 overflow-y-auto p-5 pt-2 scrollbar-thin scrollbar-thumb-slate-200">
           {children}
         </div>

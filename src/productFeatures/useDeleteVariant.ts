@@ -8,10 +8,8 @@ export function useDeleteVariant() {
     mutationFn: deleteVariant,
 
     onSuccess: (_, variables) => {
-      // refresh products list
       queryClient.invalidateQueries({ queryKey: ["products"] });
 
-      // optionally invalidate single product if cached
       queryClient.invalidateQueries({
         queryKey: ["product", variables.product_id],
       });

@@ -31,14 +31,14 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 backdrop-blur-sm z-[100] flex items-center justify-center p-4"
+            className="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-[100] flex items-center justify-center p-4"
           >
             {/* Modal Container */}
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              onClick={(e) => e.stopPropagation()} // Prevents closing when clicking inside
+              onClick={(e) => e.stopPropagation()}
               className="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden relative border border-slate-200"
             >
               {/* Header */}

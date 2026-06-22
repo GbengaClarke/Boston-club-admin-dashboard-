@@ -1,7 +1,7 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { Product, Category, Material } from "../types/ProductTypes";
 import { useEditProduct } from "./useEditProduct";
-import { Upload, X, RefreshCw, PlusSquare } from "lucide-react";
+import { Upload, X, RefreshCw, PlusSquare, Loader2 } from "lucide-react";
 
 interface EditProductFormProps {
   product: Product;
@@ -22,6 +22,9 @@ export default function EditProductForm({
 }: EditProductFormProps) {
   const { editProduct, isEditing } = useEditProduct();
 
+  // Track all generated Object URLs in a mutable ref to guarantee zero memory leaks on unmount
+  const activePreviewsRef = useRef<string[]>([]);
+
   // Core Product details state fields
   const [name, setName] = useState(product.name);
   const [description, setDescription] = useState(product.description);
@@ -29,7 +32,6 @@ export default function EditProductForm({
   const [discount, setDiscount] = useState(product.discount);
   const [isNewArrival, setIsNewArrival] = useState(product.isNewArrival);
 
-  // Explicitly type your select state setters to align with ProductTypes
   const [category, setCategory] = useState<Category>(product.category);
   const [material, setMaterial] = useState<Material>(product.material);
 
@@ -56,6 +58,13 @@ export default function EditProductForm({
 
   const [variants, setVariants] = useState<VariantState[]>(initialVariants);
 
+  // Clean up all active object URLs when form finishes lifecycle or closes unexpectedly
+  useEffect(() => {
+    return () => {
+      activePreviewsRef.current.forEach((url) => URL.revokeObjectURL(url));
+    };
+  }, []);
+
   const handleFileChange = (index: number, files: FileList | null) => {
     if (!files) return;
     const fileArray = Array.from(files);
@@ -64,8 +73,19 @@ export default function EditProductForm({
       prev.map((v, i) => {
         if (i !== index) return v;
 
-        v.previews.forEach((p) => URL.revokeObjectURL(p));
-        const newUrls = fileArray.map((file) => URL.createObjectURL(file));
+        // Revoke current variations image pointers being replaced
+        v.previews.forEach((p) => {
+          URL.revokeObjectURL(p);
+          activePreviewsRef.current = activePreviewsRef.current.filter(
+            (url) => url !== p
+          );
+        });
+
+        const newUrls = fileArray.map((file) => {
+          const url = URL.createObjectURL(file);
+          activePreviewsRef.current.push(url);
+          return url;
+        });
 
         return {
           ...v,
@@ -87,7 +107,12 @@ export default function EditProductForm({
     setVariants((prev) =>
       prev.map((v, i) => {
         if (i !== index) return v;
-        v.previews.forEach((p) => URL.revokeObjectURL(p));
+        v.previews.forEach((p) => {
+          URL.revokeObjectURL(p);
+          activePreviewsRef.current = activePreviewsRef.current.filter(
+            (url) => url !== p
+          );
+        });
         return { ...v, newFiles: [], previews: [], mode: "keep" };
       })
     );
@@ -125,48 +150,62 @@ export default function EditProductForm({
   return (
     <form
       onSubmit={handleSubmit}
-      className="flex flex-col gap-5 text-slate-700 max-w-2xl mx-auto"
+      className="flex flex-col gap-6 text-slate-800 max-w-2xl mx-auto bg-white p-1"
     >
       {/* FIELDS GRID */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div className="flex flex-col gap-2">
+          <label
+            htmlFor="edit-product-name"
+            className="text-xs font-bold text-slate-700 uppercase tracking-wider"
+          >
             Product Name
           </label>
           <input
+            id="edit-product-name"
             type="text"
             required
+            disabled={isEditing}
             value={name}
             onChange={(e) => setName(e.target.value)}
-            className="w-full px-3 py-2 rounded-lg border border-slate-200 outline-none focus:border-indigo-600 text-sm font-medium transition-colors"
+            className="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-slate-900 bg-white font-medium outline-none focus:ring-4 focus:ring-indigo-50 focus:border-indigo-600 transition-all disabled:bg-slate-50 disabled:cursor-not-allowed"
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">
+        <div className="grid grid-cols-2 gap-4">
+          <div className="flex flex-col gap-2">
+            <label
+              htmlFor="edit-product-category"
+              className="text-xs font-bold text-slate-700 uppercase tracking-wider"
+            >
               Category
             </label>
             <select
+              id="edit-product-category"
               value={category}
-              // Cast string targets safely to your strict type definitions
+              disabled={isEditing}
               onChange={(e) => setCategory(e.target.value as Category)}
-              className="w-full px-3 py-2 rounded-lg border border-slate-200 outline-none focus:border-indigo-600 text-sm font-medium bg-white"
+              className="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-slate-900 font-medium bg-white outline-none focus:ring-4 focus:ring-indigo-50 focus:border-indigo-600 transition-all disabled:bg-slate-50 disabled:cursor-not-allowed"
             >
               <option value="clogs">Clogs</option>
               <option value="sandals">Sandals</option>
               <option value="slides">Slides</option>
             </select>
           </div>
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">
+
+          <div className="flex flex-col gap-2">
+            <label
+              htmlFor="edit-product-material"
+              className="text-xs font-bold text-slate-700 uppercase tracking-wider"
+            >
               Material
             </label>
             <select
+              id="edit-product-material"
               value={material}
-              // Cast string targets safely to your strict type definitions
+              disabled={isEditing}
               onChange={(e) => setMaterial(e.target.value as Material)}
-              className="w-full px-3 py-2 rounded-lg border border-slate-200 outline-none focus:border-indigo-600 text-sm font-medium bg-white"
+              className="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-slate-900 font-medium bg-white outline-none focus:ring-4 focus:ring-indigo-50 focus:border-indigo-600 transition-all disabled:bg-slate-50 disabled:cursor-not-allowed"
             >
               <option value="suede">Suede</option>
               <option value="leather">Leather</option>
@@ -175,55 +214,73 @@ export default function EditProductForm({
         </div>
       </div>
 
-      <div className="flex flex-col gap-1.5">
-        <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">
+      <div className="flex flex-col gap-2">
+        <label
+          htmlFor="edit-product-desc"
+          className="text-xs font-bold text-slate-700 uppercase tracking-wider"
+        >
           Description
         </label>
         <textarea
-          rows={2}
+          id="edit-product-desc"
+          rows={3}
+          disabled={isEditing}
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          className="w-full px-3 py-2 rounded-lg border border-slate-200 outline-none focus:border-indigo-600 text-sm font-medium resize-none transition-colors"
+          className="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-slate-900 bg-white font-medium resize-none outline-none focus:ring-4 focus:ring-indigo-50 focus:border-indigo-600 transition-all disabled:bg-slate-50 disabled:cursor-not-allowed"
         />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-center">
-        <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-center">
+        <div className="flex flex-col gap-2">
+          <label
+            htmlFor="edit-product-price"
+            className="text-xs font-bold text-slate-700 uppercase tracking-wider"
+          >
             Regular Price
           </label>
           <input
+            id="edit-product-price"
             type="number"
             min={0}
             required
-            value={regularPrice}
+            disabled={isEditing}
+            value={regularPrice || ""}
             onChange={(e) => setRegularPrice(Number(e.target.value))}
-            className="w-full px-3 py-2 rounded-lg border border-slate-200 outline-none focus:border-indigo-600 text-sm font-medium"
+            className="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-slate-900 font-semibold outline-none focus:ring-4 focus:ring-indigo-50 focus:border-indigo-600 transition-all disabled:bg-slate-50 disabled:cursor-not-allowed"
           />
         </div>
-        <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-bold text-slate-500 uppercase tracking-wide">
+
+        <div className="flex flex-col gap-2">
+          <label
+            htmlFor="edit-product-discount"
+            className="text-xs font-bold text-slate-700 uppercase tracking-wider"
+          >
             Discount Price
           </label>
           <input
+            id="edit-product-discount"
             type="number"
             min={0}
-            value={discount}
+            disabled={isEditing}
+            value={discount || ""}
             onChange={(e) => setDiscount(Number(e.target.value))}
-            className="w-full px-3 py-2 rounded-lg border border-slate-200 outline-none focus:border-indigo-600 text-sm font-medium"
+            className="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-slate-900 font-semibold outline-none focus:ring-4 focus:ring-indigo-50 focus:border-indigo-600 transition-all disabled:bg-slate-50 disabled:cursor-not-allowed"
           />
         </div>
-        <div className="flex items-center gap-2 h-full pt-5">
+
+        <div className="flex items-center gap-3 h-full pt-6">
           <input
             type="checkbox"
             id="editNewArrival"
+            disabled={isEditing}
             checked={isNewArrival}
             onChange={(e) => setIsNewArrival(e.target.checked)}
-            className="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500"
+            className="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500 disabled:opacity-50 h-5 w-5 cursor-pointer"
           />
           <label
             htmlFor="editNewArrival"
-            className="text-xs font-bold text-slate-600 uppercase select-none tracking-wide"
+            className="text-xs font-bold text-slate-700 uppercase select-none tracking-wide cursor-pointer"
           >
             Mark as New Arrival
           </label>
@@ -231,12 +288,12 @@ export default function EditProductForm({
       </div>
 
       {/* DYNAMIC VARIANT IMAGES MANAGEMENT STRIP */}
-      <div className="border-t border-slate-100 pt-4 mt-2">
-        <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">
+      <div className="border-t border-slate-200 pt-5 mt-2">
+        <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wider mb-4">
           Manage Variant Media Layers
         </h4>
 
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-5">
           {variants.map((v, index) => {
             const variantImagesCount =
               product.product_images?.filter(
@@ -246,43 +303,45 @@ export default function EditProductForm({
             return (
               <div
                 key={v.color_name}
-                className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 flex flex-col gap-3"
+                className="p-5 rounded-2xl border border-slate-300 bg-slate-50 flex flex-col gap-4 shadow-sm"
               >
-                <div className="flex items-center justify-between flex-wrap gap-2">
-                  <div className="flex items-center gap-2">
+                <div className="flex items-center justify-between flex-wrap gap-3">
+                  <div className="flex items-center gap-2.5">
                     <span
-                      className="w-5 h-5 rounded-full border border-black/10 shadow-sm"
+                      className="w-5 h-5 rounded-full border border-slate-400 shadow-sm shrink-0"
                       style={{ backgroundColor: v.color_hex }}
                     />
-                    <span className="text-sm font-bold text-slate-800 capitalize">
+                    <span className="text-sm font-bold text-slate-900 capitalize">
                       {v.color_name}
                     </span>
-                    <span className="text-[10px] text-slate-400 font-medium">
+                    <span className="text-xs text-slate-600 font-semibold">
                       ({variantImagesCount} current assets)
                     </span>
                   </div>
 
                   {/* OVERWRITE / APPEND TARGET TOGGLE CHIPS */}
                   {v.newFiles.length > 0 && (
-                    <div className="flex items-center gap-1.5 bg-white border border-slate-200 p-1 rounded-lg shadow-sm">
+                    <div className="flex items-center gap-1.5 bg-white border border-slate-300 p-1 rounded-xl shadow-sm">
                       <button
                         type="button"
+                        disabled={isEditing}
                         onClick={() => handleToggleMode(index, "append")}
-                        className={`flex items-center gap-1 px-2 py-1 text-xs font-bold uppercase rounded-md transition-all ${
+                        className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold uppercase rounded-lg transition-all ${
                           v.mode === "append"
-                            ? "bg-indigo-50 text-indigo-600 border border-indigo-200"
-                            : "text-slate-400 hover:text-slate-600 border border-transparent"
+                            ? "bg-indigo-600 text-white shadow-sm"
+                            : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                         }`}
                       >
                         <PlusSquare className="w-3.5 h-3.5" /> Append
                       </button>
                       <button
                         type="button"
+                        disabled={isEditing}
                         onClick={() => handleToggleMode(index, "overwrite")}
-                        className={`flex items-center gap-1 px-2 py-1 text-xs font-bold uppercase rounded-md transition-all ${
+                        className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold uppercase rounded-lg transition-all ${
                           v.mode === "overwrite"
-                            ? "bg-rose-50 text-rose-600 border border-rose-200"
-                            : "text-slate-400 hover:text-slate-600 border border-transparent"
+                            ? "bg-rose-600 text-white shadow-sm"
+                            : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                         }`}
                       >
                         <RefreshCw className="w-3.5 h-3.5" /> Overwrite
@@ -292,29 +351,32 @@ export default function EditProductForm({
                 </div>
 
                 {/* IMAGES DROPZONE / LIST VIEW */}
-                <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
+                <div className="grid grid-cols-4 sm:grid-cols-6 gap-3">
                   {v.previews.map((src, pIdx) => (
                     <div
                       key={pIdx}
-                      className="aspect-square bg-slate-100 border border-slate-200 rounded-lg overflow-hidden relative group"
+                      className="aspect-square bg-white border border-slate-300 rounded-xl overflow-hidden relative shadow-sm"
                     >
                       <img
                         src={src}
                         className="w-full h-full object-cover"
-                        alt="Preview item"
+                        alt={`${v.color_name} variant display preview ${
+                          pIdx + 1
+                        }`}
                       />
                     </div>
                   ))}
 
-                  <label className="aspect-square bg-white hover:bg-slate-50 border border-dashed border-slate-300 hover:border-indigo-400 rounded-xl cursor-pointer flex flex-col items-center justify-center text-slate-400 transition-colors relative">
-                    <Upload className="w-4 h-4 text-slate-400 mb-0.5" />
-                    <span className="text-[9px] font-bold uppercase text-slate-400">
+                  <label className="aspect-square bg-white hover:bg-slate-100 border-2 border-dashed border-slate-300 hover:border-indigo-500 rounded-xl cursor-pointer flex flex-col items-center justify-center text-slate-600 transition-colors relative disabled:opacity-50">
+                    <Upload className="w-5 h-5 text-slate-700 mb-1" />
+                    <span className="text-[10px] font-bold uppercase text-slate-700 tracking-wide">
                       Upload
                     </span>
                     <input
                       type="file"
                       multiple
                       accept="image/*"
+                      disabled={isEditing}
                       className="hidden"
                       onChange={(e) => handleFileChange(index, e.target.files)}
                     />
@@ -323,11 +385,12 @@ export default function EditProductForm({
                   {v.newFiles.length > 0 && (
                     <button
                       type="button"
+                      disabled={isEditing}
                       onClick={() => clearVariantFiles(index)}
-                      className="aspect-square bg-white hover:bg-rose-50 text-slate-400 hover:text-rose-600 border border-slate-200 hover:border-rose-200 rounded-xl transition-colors flex flex-col items-center justify-center text-xs font-medium"
+                      className="aspect-square bg-white hover:bg-rose-50 text-slate-700 hover:text-rose-600 border border-slate-300 hover:border-rose-300 rounded-xl transition-colors flex flex-col items-center justify-center text-xs font-bold"
                     >
-                      <X className="w-4 h-4 mb-0.5" />
-                      <span className="text-[9px] font-bold uppercase">
+                      <X className="w-5 h-5 mb-1 text-slate-600 group-hover:text-rose-600" />
+                      <span className="text-[10px] font-bold uppercase tracking-wide">
                         Clear
                       </span>
                     </button>
@@ -340,21 +403,28 @@ export default function EditProductForm({
       </div>
 
       {/* FORM ACTIONS */}
-      <div className="flex gap-3 pt-3 border-t border-slate-100">
+      <div className="flex gap-4 pt-4 border-t border-slate-200 mt-2">
         <button
           type="button"
           disabled={isEditing}
           onClick={onClose}
-          className="flex-1 py-2.5 text-sm font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-xl transition-colors disabled:opacity-50"
+          className="flex-1 py-3 text-xs font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 border border-slate-200 rounded-xl transition-colors disabled:opacity-50"
         >
           Cancel
         </button>
         <button
           type="submit"
           disabled={isEditing}
-          className="flex-1 py-2.5 text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-sm transition-colors disabled:opacity-50 flex items-center justify-center"
+          className="flex-1 py-3 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-md transition-colors disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none flex items-center justify-center gap-2"
         >
-          {isEditing ? "Saving Changes..." : "Save Product Details"}
+          {isEditing ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Saving Changes...
+            </>
+          ) : (
+            "Save Product Details"
+          )}
         </button>
       </div>
     </form>

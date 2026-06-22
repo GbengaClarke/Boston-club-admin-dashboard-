@@ -15,10 +15,26 @@ export const getProduct = async (id: string) => {
   return data;
 };
 
+// export const getProducts = async () => {
+//   const { data, error } = await supabase
+//     .from("products")
+//     .select("*, product_images(*)")
+//     .order("created_at", { ascending: false });
+
+//   if (error) {
+//     console.error("Supabase Error:", error.message);
+//     throw new Error(error.message);
+//   }
+
+//   return data;
+// };
+
 export const getProducts = async () => {
   const { data, error } = await supabase
     .from("products")
     .select("*, product_images(*)")
+    .eq("is_archived", false) // Filters out archived products
+    .eq("product_images.is_archived", false) // Filters out archived images/variants
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -29,15 +45,51 @@ export const getProducts = async () => {
   return data;
 };
 
-export async function deleteProduct(id: string | number) {
-  const { data, error } = await supabase.from("products").delete().eq("id", id);
 
-  if (error) {
-    console.error(error);
-    throw new Error("Product could not be deleted");
+
+// export async function deleteProduct(id: string | number) {
+//   const { data, error } = await supabase
+//     .from("products")
+//     .update({ is_archived: true })
+//     .eq("id", id)
+//     .select();
+//   if (error) {
+//     console.error(error);
+//     throw new Error("Product could not be archived");
+//   }
+
+//   return data;
+// }
+
+export async function deleteProduct(id: string | number) {
+  // Execute both table updates concurrently
+  const [productResponse, imagesResponse] = await Promise.all([
+    supabase
+      .from("products")
+      .update({ is_archived: true })
+      .eq("id", id)
+      .select(),
+    
+    supabase
+      .from("product_images")
+      .update({ is_archived: true })
+      .eq("product_id", id)
+  ]);
+
+  // Handle product update errors
+  if (productResponse.error) {
+    console.error("Product Archive Error:", productResponse.error.message);
+    throw new Error("Product could not be archived");
   }
 
-  return data;
+  // Handle images/variants update errors
+  if (imagesResponse.error) {
+    console.error("Product Images Archive Error:", imagesResponse.error.message);
+    throw new Error("Product variants could not be fully archived");
+  }
+
+  // Return the updated product data
+  return productResponse.data;
 }
 
 type AddProductInput = {
@@ -122,9 +174,7 @@ export async function addProduct(productData: AddProductInput) {
     })
   );
 
-  // =========================
   // 3. INSERT PRODUCT IMAGES
-  // =========================
 
   const { error: imageError } = await supabase
     .from("product_images")
@@ -185,51 +235,62 @@ export const addProductVariant = async (payload: AddVariantPayload) => {
   return data;
 };
 
+
+
 export async function deleteVariant({
   product_id,
   color_name,
 }: {
-  product_id: string;
+  product_id: string | number;
   color_name: string;
 }) {
-  // 1. Delete variant (all images of that color)
-  const { error: deleteError } = await supabase
+  // Archive the variant (all images of that color)
+  const { error: variantArchiveError } = await supabase
     .from("product_images")
-    .delete()
+    .update({ is_archived: true })
     .eq("product_id", product_id)
     .eq("color_name", color_name);
 
-  if (deleteError) throw deleteError;
+  if (variantArchiveError) {
+    console.error("Failed to archive variant images:", variantArchiveError.message);
+    throw variantArchiveError;
+  }
 
-  // 2. Check if ANY variants remain
+  //  Check if ANY ACTIVE variants remain
   const { data: remaining, error: fetchError } = await supabase
     .from("product_images")
     .select("id")
     .eq("product_id", product_id)
+    .eq("is_archived", false) 
     .limit(1);
 
-  if (fetchError) throw fetchError;
+  if (fetchError) {
+    console.error("Error checking remaining variants:", fetchError.message);
+    throw fetchError;
+  }
 
   const hasNoVariants = !remaining || remaining.length === 0;
 
-  // 3. If none remain → delete product
+  //  If none remain → archive the entire parent product
   if (hasNoVariants) {
-    const { error: productDeleteError } = await supabase
+    const { error: productArchiveError } = await supabase
       .from("products")
-      .delete()
+      .update({ is_archived: true })
       .eq("id", product_id);
 
-    if (productDeleteError) throw productDeleteError;
+    if (productArchiveError) {
+      console.error("Failed to archive product after last variant:", productArchiveError.message);
+      throw productArchiveError;
+    }
   }
 
   return {
-    deletedVariant: true,
-    deletedProduct: hasNoVariants,
+    archivedVariant: true,
+    archivedProduct: hasNoVariants,
   };
 }
 
-// import { supabase } from "./supabase";
-// import { Product } from "../types/ProductTypes";
+
 
 export interface UpdateProductPayload {
   productId: string;
@@ -261,9 +322,7 @@ export async function updateProductAndVariants(payload: UpdateProductPayload) {
     variantConfigurations,
   } = payload;
 
-  // ==========================================
-  // 1. UPDATE BASE PRODUCT DETAILS
-  // ==========================================
+  //  UPDATE BASE PRODUCT DETAILS
   const { error: productUpdateError } = await supabase
     .from("products")
     .update({
@@ -280,16 +339,13 @@ export async function updateProductAndVariants(payload: UpdateProductPayload) {
   if (productUpdateError)
     throw new Error(`Product update failed: ${productUpdateError.message}`);
 
-  // ==========================================
-  // 2. PROCESS VARIANTS SEQUENTIALLY
-  // ==========================================
+  //  PROCESS VARIANTS SEQUENTIALLY
   for (const config of variantConfigurations) {
     // Skip if user is keeping existing images and didn't add files
     if (config.mode === "keep" || config.newFiles.length === 0) continue;
 
-    // OVERWRITE MODE: Delete existing files from storage & rows from table
+    // OVERWRITE: Delete existing files from storage & rows from table
     if (config.mode === "overwrite") {
-      // Fetch target row fields to isolate storage file names
       const { data: records } = await supabase
         .from("product_images")
         .select("image_url")

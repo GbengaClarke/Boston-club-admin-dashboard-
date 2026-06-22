@@ -11,7 +11,6 @@ export function useDeleteProduct() {
     onSuccess: () => {
       toast.success("Product successfully deleted");
 
-      // Invalidate the cache to refresh the product list
       queryClient.invalidateQueries({
         queryKey: ["products"],
       });

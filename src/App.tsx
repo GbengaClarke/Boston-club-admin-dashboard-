@@ -53,6 +53,7 @@ export default function App() {
               background: "#1e293b",
               color: "#fff",
               border: "1px solid #334155",
+              textAlign: "center",
             },
           }}
         />

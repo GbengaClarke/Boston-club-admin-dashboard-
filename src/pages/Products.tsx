@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Plus, ShoppingBag } from "lucide-react";
+import { Loader2, Plus, ShoppingBag } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { useGetProducts } from "../productFeatures/useGetProducts";
 import { Product } from "../types/ProductTypes";
@@ -64,7 +64,6 @@ export function Products() {
     });
   };
 
-  // --- HANDLERS ---
   const handleOpenDrawer = (product: Product) => {
     setSelectedProduct(product);
   };
@@ -210,35 +209,53 @@ export function Products() {
         )}
       </ModalForm>
 
-      {/* DELETE MODAL */}
       <Modal
         isOpen={isDeleteModalOpen}
         onClose={() => !isDeleting && setIsDeleteModalOpen(false)}
         title="Delete Product"
       >
-        <div className="flex flex-col gap-5">
-          <p className="text-sm text-slate-600 leading-relaxed">
-            Are you sure you want to delete{" "}
-            <span className="font-semibold text-slate-900">
-              {productToDelete?.name}
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleConfirmDelete();
+          }}
+          className="flex flex-col gap-6"
+        >
+          <p className="text-sm text-slate-700 leading-relaxed">
+            Are you sure you want to permanently delete{" "}
+            <span className="font-bold text-slate-955 break-words">
+              {productToDelete?.name || "this product"}
             </span>
-            ?
+            ? This action cannot be undone.
           </p>
-          <div className="flex justify-end gap-3">
+
+          {/* ACTIONS FOOTER */}
+          <div className="flex justify-end items-center gap-3 border-t border-slate-200 pt-4 shrink-0">
             <button
+              type="button"
+              disabled={isDeleting}
               onClick={() => setIsDeleteModalOpen(false)}
-              className="px-4 py-2 text-sm font-semibold text-slate-600"
+              className="px-5 py-2.5 border border-slate-300 rounded-xl text-xs font-bold text-slate-700 bg-white hover:bg-slate-100 hover:text-slate-900 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Cancel
             </button>
+
             <button
-              onClick={handleConfirmDelete}
-              className="px-4 py-2 bg-rose-600 text-white rounded-lg text-sm font-semibold"
+              type="submit"
+              disabled={isDeleting}
+              className="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-rose-50 disabled:bg-slate-200 disabled:text-slate-400 disabled:border-slate-200 disabled:shadow-none disabled:cursor-not-allowed flex items-center justify-center gap-2 min-w-[130px]"
             >
-              {isDeleting ? "Deleting..." : "Confirm Delete"}
+              {isDeleting ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                "Confirm Delete"
+              )}
             </button>
           </div>
-        </div>
+        </form>
       </Modal>
 
       {/* SIDE PREVIEW DRAWER */}
