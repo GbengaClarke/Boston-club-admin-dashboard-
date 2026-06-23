@@ -10,14 +10,14 @@ export function useOrders(statusFilter: string) {
   const queryClient = useQueryClient();
   const cacheQueryKey = ["orders", { statusFilter }];
 
-  // 1. Fetching Query
+  // Fetching Query
   const ordersQuery = useQuery({
     queryKey: cacheQueryKey,
     queryFn: () => fetchOrdersApi({ statusFilter }),
     placeholderData: (previousData) => previousData,
   });
 
-  // 2. Status Mutation
+  // Status Mutation
   const statusMutation = useMutation({
     mutationFn: updateOrderStatusApi,
     onMutate: async ({ id, status }) => {
@@ -42,7 +42,7 @@ export function useOrders(statusFilter: string) {
     onSettled: () => queryClient.invalidateQueries({ queryKey: cacheQueryKey }),
   });
 
-  // 3. Tracking Mutation
+  // Tracking Mutation
   const trackingMutation = useMutation({
     mutationFn: updateOrderTrackingApi,
     onMutate: async ({ id, code }) => {

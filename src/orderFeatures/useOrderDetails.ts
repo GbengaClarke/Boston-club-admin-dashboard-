@@ -25,7 +25,7 @@ export function useOrderDetails(
           `
           id, quantity, unit_price,
           products (name, category, material),
-          product_images (color_name)
+          product_images (color_name,image_url)
         `
         )
         .eq("order_id", orderId);

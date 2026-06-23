@@ -3,11 +3,11 @@ import { motion } from "framer-motion";
 import {
   X,
   ShieldCheck,
-  Mail,
   MapPin,
   Layers,
   Trash2,
   AlertTriangle,
+  Package,
 } from "lucide-react";
 import { cn, formatCurrency } from "../lib/utils";
 import { ORDER_STATUS_CONFIG } from "../types/ProductTypes";
@@ -20,241 +20,229 @@ interface OrderDetailDrawerProps {
   onStatusChange: (id: string, status: string) => void;
 }
 
-export function OrderDetailDrawer({
-  order,
-  onClose,
-  onStatusChange,
-}: OrderDetailDrawerProps) {
+export function OrderDetailDrawer({ order, onClose }: OrderDetailDrawerProps) {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-
-  // Bind core UI handlers directly to custom data management engine
-  const { items, isLoading, isError, deleteOrder, isDeleting } =
-    useOrderDetails(order?.id, order?.order_number, () => {
+  const { items, isLoading, deleteOrder, isDeleting } = useOrderDetails(
+    order?.id,
+    order?.order_number,
+    () => {
       setIsDeleteModalOpen(false);
       onClose();
-    });
+    }
+  );
 
   const currentStatusConfig = ORDER_STATUS_CONFIG[order?.status] || {
-    className: "bg-slate-200 text-slate-600 border-slate-300",
-    label: order?.status || "",
+    className: "bg-slate-100 text-slate-700 border-slate-200",
+    label: order?.status || "Pending",
   };
 
   return (
     <>
       <div className="fixed inset-0 z-50 overflow-hidden flex justify-end">
-        {/* Backdrop */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 0.4 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
-          className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"
+          className="absolute inset-0 bg-slate-900/50 backdrop-blur-[2px]"
         />
 
-        {/* Sliding Frame Drawer */}
         <motion.div
           initial={{ x: "100%" }}
           animate={{ x: 0 }}
           exit={{ x: "100%" }}
-          transition={{ type: "tween", duration: 0.3 }}
+          transition={{ type: "spring", damping: 25, stiffness: 200 }}
           className="relative w-full max-w-md bg-white h-full shadow-2xl flex flex-col z-10 border-l border-slate-200"
         >
-          {/* Header Block */}
+          {/* Header */}
           <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
             <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-base font-bold text-slate-900">
-                  Order #BC-{order?.order_number || ""}
-                </h2>
-                <span
-                  className={cn(
-                    "text-[10px] font-bold px-2.5 py-0.5 rounded-full border font-mono uppercase tracking-wider shadow-sm",
-                    currentStatusConfig.className
-                  )}
-                >
-                  {currentStatusConfig.label}
-                </span>
-              </div>
+              <h2 className="text-xl font-black text-slate-950 tracking-tight">
+                Order #{order?.order_number}
+              </h2>
+              <span
+                className={cn(
+                  "mt-2 inline-block text-[10px] font-extrabold px-3 py-1 rounded-full border uppercase tracking-widest shadow-sm",
+                  currentStatusConfig.className
+                )}
+              >
+                {currentStatusConfig.label}
+              </span>
             </div>
-
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-5">
               <button
                 onClick={() => setIsDeleteModalOpen(true)}
-                className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-all"
-                title="Permanently Delete Order"
+                className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all"
               >
                 <Trash2 className="w-4 h-4" />
               </button>
-
               <button
                 onClick={onClose}
-                className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-all"
+                className="p-2 text-slate-400 hover:text-slate-900 hover:bg-slate-100 rounded-xl transition-all"
               >
-                <X className="w-4 h-4" />
+                <X className="w-6 h-6" />
               </button>
             </div>
           </div>
 
-          {/* Dynamic Structural Summary Body */}
-          <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-6">
-            {/* Section 1: Customer Profile Details */}
-            <div className="flex flex-col gap-2.5">
-              <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+          {/* Body */}
+          <div className="flex-1 overflow-y-auto p-6 space-y-8">
+            {/* Customer Info */}
+            <section>
+              <h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-3 flex items-center gap-2">
                 <ShieldCheck className="w-3.5 h-3.5 text-indigo-500" /> Customer
-                Information
+                Data
               </h3>
-              <div className="bg-slate-50 rounded-xl p-4 border border-slate-100 text-xs text-slate-700 flex flex-col gap-2">
-                <p className="font-bold text-slate-900 text-sm">
-                  {order?.profiles?.full_name || "Ordering Customer"}
-                </p>
-                <p className="flex items-center gap-2 text-slate-500 font-mono">
-                  <Mail className="w-3.5 h-3.5" />{" "}
-                  {order?.profiles?.email || "No account connection"}
-                </p>
-                <div className="flex items-start gap-2 text-slate-600 border-t border-slate-200/60 pt-2 mt-1">
-                  <MapPin className="w-3.5 h-3.5 mt-0.5 text-slate-400 shrink-0" />
-                  <span className="leading-relaxed">
-                    {order?.shipping_address
-                      ? typeof order.shipping_address === "string"
-                        ? order.shipping_address
-                        : JSON.stringify(order.shipping_address)
-                      : "No address payload logged for this transaction entry."}
-                  </span>
+              <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm space-y-4">
+                <div>
+                  <p className="font-bold text-slate-950 text-sm capitalize">
+                    {order?.profiles?.full_name || "Guest"}
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    {order?.profiles?.email || "No email provided"}
+                  </p>
+                </div>
+                <div className="flex gap-2 text-slate-600 text-xs pt-4 border-t border-slate-100">
+                  <MapPin className="w-3.5 h-3.5 text-indigo-400 shrink-0 mt-0.5" />
+                  <p className="leading-relaxed">
+                    {order?.shipping_address || "No address provided"}
+                  </p>
                 </div>
               </div>
-            </div>
+            </section>
 
-            {/* Section 2: Product Line Contents */}
-            <div className="flex flex-col gap-2.5">
-              <h3 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-                <Layers className="w-3.5 h-3.5 text-indigo-500" /> Itemized
-                Packages
+            {/* Items */}
+            <section className="w-full">
+              <h3 className="text-[11px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-3 flex items-center gap-2">
+                <Layers className="w-3.5 h-3.5 text-indigo-500" /> Order Items
               </h3>
 
               {isLoading ? (
-                <div className="py-8 flex justify-center">
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-slate-400"></div>
-                </div>
-              ) : isError ? (
-                <div className="py-4 text-center text-xs text-red-500 font-medium bg-red-50 rounded-xl border border-red-100 p-3">
-                  Failed to parse layout configuration or fetch operational line
-                  items.
+                <div className="py-20 flex justify-center items-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
                 </div>
               ) : (
-                <div className="divide-y divide-slate-100 border border-slate-100 rounded-xl overflow-hidden bg-white shadow-sm">
+                <div className="space-y-3">
                   {items.map((item: any) => (
                     <div
                       key={item.id}
-                      className="p-4 flex justify-between items-start text-xs bg-slate-50/20 hover:bg-slate-50/50 transition-colors"
+                      className="flex flex-wrap sm:flex-nowrap justify-between items-center p-3 sm:p-4 bg-slate-50 rounded-2xl border border-slate-100 hover:border-indigo-100 transition-colors gap-3"
                     >
-                      <div className="flex flex-col gap-0.5">
-                        <span className="font-bold text-slate-800 text-sm">
-                          {item.products?.name}
-                        </span>
-                        <span className="text-slate-400 capitalize text-[11px]">
-                          Category: {item.products?.category} | Mat:{" "}
-                          {item.products?.material}
-                        </span>
-                        <span className="inline-flex items-center mt-1 font-medium bg-slate-100 text-slate-600 px-2 py-0.5 rounded text-[10px] w-fit">
-                          {item.product_images?.color_name || "Base"}
-                        </span>
+                      <div className="flex items-center gap-3 w-full sm:w-auto">
+                        <div className="w-12 h-12 sm:w-10 sm:h-10 shrink-0 bg-white rounded-lg border border-slate-100 shadow-sm overflow-hidden flex items-center justify-center">
+                          {item.product_images?.image_url ? (
+                            <img
+                              src={item.product_images.image_url}
+                              alt={item.products?.name || "Product"}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <Package className="w-5 h-5 sm:w-4 sm:h-4 text-slate-400" />
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-bold text-slate-900 text-sm truncate">
+                            {item.products?.name}
+                          </p>
+                          <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                            <p className="text-[10px] text-slate-500 uppercase tracking-wide font-bold whitespace-nowrap">
+                              Color:{" "}
+                              <span className="text-indigo-600">
+                                {item.product_images?.color_name || "N/A"}
+                              </span>
+                            </p>
+                            <span className="text-slate-300 hidden sm:inline">
+                              |
+                            </span>
+                            <p className="text-[10px] text-slate-500 uppercase tracking-wide font-bold whitespace-nowrap">
+                              Mat:{" "}
+                              <span className="text-indigo-600">
+                                {item.products?.material || "N/A"}
+                              </span>
+                            </p>
+                          </div>
+                        </div>
                       </div>
-                      <div className="text-right flex flex-col justify-between h-full items-end">
-                        <span className="font-bold text-slate-900">
+
+                      <div className="text-left sm:text-right w-full sm:w-auto pl-[3.75rem] sm:pl-0">
+                        <p className="font-black text-slate-950 text-sm">
                           {formatCurrency
                             ? formatCurrency(item.unit_price)
                             : `₦${item.unit_price}`}
-                        </span>
-                        <span className="text-[10px] text-slate-400 mt-1">
-                          Qty: x{item.quantity}
-                        </span>
+                        </p>
+                        <p className="text-[12px] font-bold text-slate-500">
+                          Qty: {item.quantity}
+                        </p>
                       </div>
                     </div>
                   ))}
                 </div>
               )}
-            </div>
+            </section>
           </div>
 
-          {/* Fixed Receipt Ledger Action Bottom Block */}
-          <div className="p-6 border-t border-slate-100 bg-slate-50/50 flex flex-col gap-4 shadow-inner">
-            <div className="flex justify-between items-center">
-              <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">
-                Total Receipt Value
+          {/* Footer */}
+          <div className="p-6 border-t border-slate-100 bg-slate-50/50 backdrop-blur-sm">
+            <div className="flex justify-between items-end">
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-[0.2em]">
+                Total Value
               </span>
-              <span className="text-lg font-black text-indigo-600 font-mono">
-                {formatCurrency && order?.total_price
-                  ? formatCurrency(order.total_price)
-                  : `₦${order?.total_price || 0}`}
+              <span className="text-2xl font-black text-indigo-700 tracking-tight">
+                {formatCurrency
+                  ? formatCurrency(order?.total_price)
+                  : `₦${order?.total_price}`}
               </span>
-            </div>
-
-            <div className="flex flex-col gap-1.5 text-[11px] text-slate-400 bg-white p-3 rounded-lg border border-slate-200 font-mono">
-              <div className="flex justify-between">
-                <span>Initialized order:</span>
-                <span>
-                  {order?.created_at
-                    ? new Date(order.created_at).toLocaleString()
-                    : ""}
-                </span>
-              </div>
-              <div className="flex justify-between text-slate-600 font-semibold border-t border-slate-100 pt-1.5 mt-1">
-                <span>Last activity:</span>
-                <span>
-                  {order?.updated_at
-                    ? new Date(order.updated_at).toLocaleString()
-                    : ""}
-                </span>
-              </div>
             </div>
           </div>
         </motion.div>
       </div>
 
-      {/* Stern Deletion System Warning Modal */}
       <Modal
         isOpen={isDeleteModalOpen}
         onClose={() => !isDeleting && setIsDeleteModalOpen(false)}
-        title="Critical Security Confirmation"
+        title="Delete Order"
       >
-        <div className="flex flex-col gap-4">
-          <div className="flex items-start gap-3 p-3 bg-rose-50 border border-rose-100 rounded-xl text-rose-800 text-xs">
-            <AlertTriangle className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
-            <div className="flex flex-col gap-1">
-              <span className="font-bold text-sm text-rose-900">
+        <div className="flex flex-col gap-5">
+          {/*  Warning Box */}
+          <div className="flex items-start gap-4 p-4 bg-rose-50/80 border border-rose-200 rounded-xl text-rose-900">
+            <AlertTriangle className="w-6 h-6 text-rose-600 shrink-0 mt-0.5" />
+            <div className="flex flex-col gap-1.5">
+              <span className="font-black text-sm uppercase tracking-wider text-rose-950">
                 Irreversible Action Warning
               </span>
-              <p className="leading-relaxed">
+              <p className="text-sm leading-relaxed text-rose-800">
                 You are about to permanently delete{" "}
-                <strong>Order #BC-{order?.order_number}</strong>. This
-                completely wipes financial metadata tracking registers and
-                cascading sub-line item packages out of active tables.
+                <strong className="font-bold text-rose-950">
+                  Order #BC-{order?.order_number}
+                </strong>
+                . This action wipes all the data of this order.
               </p>
             </div>
           </div>
 
-          <p className="text-xs text-slate-500 font-medium px-1">
-            This operational change cannot be rolled back under any regular
-            system logs. Are you absolutely certain you want to proceed?
+          <p className="text-sm text-slate-700 font-medium px-1">
+            This change cannot be undone. Are you absolutely certain you want to
+            proceed?
           </p>
 
-          <div className="flex justify-end items-center gap-2 border-t border-slate-100 pt-4 mt-2">
+          {/* Buttons */}
+          <div className="flex justify-end items-center gap-3 border-t border-slate-100 pt-5 mt-2">
             <button
               onClick={() => setIsDeleteModalOpen(false)}
               disabled={isDeleting}
-              className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50 rounded-xl border border-slate-200 transition-colors disabled:opacity-50"
+              className="px-5 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-100 rounded-xl border border-slate-200 transition-colors disabled:opacity-50"
             >
               Cancel
             </button>
             <button
               onClick={() => deleteOrder()}
               disabled={isDeleting}
-              className="px-4 py-2 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 active:bg-rose-800 rounded-xl transition-all shadow-sm flex items-center gap-1.5 disabled:opacity-50"
+              className="px-5 py-2.5 text-sm font-bold text-white bg-rose-600 hover:bg-rose-700 active:bg-rose-800 rounded-xl transition-all shadow-sm flex items-center gap-2 disabled:opacity-50"
             >
               {isDeleting ? (
                 <>
-                  <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
-                  Deleting record...
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  Deleting...
                 </>
               ) : (
                 "Yes, Delete Entire Order"
