@@ -38,7 +38,7 @@ export function useOrders(statusFilter: string) {
       }
       toast.error(err.message || "Failed to update status on server.");
     },
-    onSuccess: () => toast.success("Order status synchronized"),
+    onSuccess: () => toast.success("Order status updated!"),
     onSettled: () => queryClient.invalidateQueries({ queryKey: cacheQueryKey }),
   });
 

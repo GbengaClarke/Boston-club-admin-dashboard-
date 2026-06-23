@@ -139,7 +139,7 @@ export default function AddVariantForm({
               value={colorHex}
               onChange={(e) => setColorHex(e.target.value)}
               placeholder="#8B5A2B"
-              className="flex-1 px-4 py-2.5 rounded-xl border border-slate-300 bg-white font-mono text-slate-900 font-semibold uppercase outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 transition-all duration-200 disabled:bg-slate-50 disabled:cursor-not-allowed"
+              className="flex-1 px-4 py-2.5 rounded-xl border border-slate-300 bg-white w-full font-mono text-slate-900 font-semibold uppercase outline-none focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 transition-all duration-200 disabled:bg-slate-50 disabled:cursor-not-allowed"
             />
           </div>
         </div>

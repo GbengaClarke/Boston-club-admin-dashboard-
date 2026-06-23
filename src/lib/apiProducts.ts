@@ -47,50 +47,51 @@ export const getProducts = async () => {
 
 
 
+export async function deleteProduct(id: string | number) {
+  const { data, error } = await supabase
+    .from("products")
+    .update({ is_archived: true })
+    .eq("id", id)
+    .select();
+  
+    if (error) {
+      console.error("Product Delete Error:", error.message);
+      throw new Error("Product could not be deleted");
+    }
+
+  return data;
+}
+
 // export async function deleteProduct(id: string | number) {
-//   const { data, error } = await supabase
-//     .from("products")
-//     .update({ is_archived: true })
-//     .eq("id", id)
-//     .select();
-//   if (error) {
-//     console.error(error);
+//   // Execute both table updates concurrently
+//   const [productResponse, imagesResponse] = await Promise.all([
+//     supabase
+//       .from("products")
+//       .update({ is_archived: true })
+//       .eq("id", id)
+//       .select(),
+    
+//     supabase
+//       .from("product_images")
+//       .update({ is_archived: true })
+//       .eq("product_id", id)
+//   ]);
+
+//   // Handle product update errors
+//   if (productResponse.error) {
+//     console.error("Product Archive Error:", productResponse.error.message);
 //     throw new Error("Product could not be archived");
 //   }
 
-//   return data;
+//   // Handle images/variants update errors
+//   if (imagesResponse.error) {
+//     console.error("Product Images Archive Error:", imagesResponse.error.message);
+//     throw new Error("Product variants could not be fully archived");
+//   }
+
+//   // Return the updated product data
+//   return productResponse.data;
 // }
-
-export async function deleteProduct(id: string | number) {
-  // Execute both table updates concurrently
-  const [productResponse, imagesResponse] = await Promise.all([
-    supabase
-      .from("products")
-      .update({ is_archived: true })
-      .eq("id", id)
-      .select(),
-    
-    supabase
-      .from("product_images")
-      .update({ is_archived: true })
-      .eq("product_id", id)
-  ]);
-
-  // Handle product update errors
-  if (productResponse.error) {
-    console.error("Product Archive Error:", productResponse.error.message);
-    throw new Error("Product could not be archived");
-  }
-
-  // Handle images/variants update errors
-  if (imagesResponse.error) {
-    console.error("Product Images Archive Error:", imagesResponse.error.message);
-    throw new Error("Product variants could not be fully archived");
-  }
-
-  // Return the updated product data
-  return productResponse.data;
-}
 
 type AddProductInput = {
   name: string;
