@@ -9,7 +9,6 @@ export function useOrderDetails(
 ) {
   const queryClient = useQueryClient();
 
-  // Fetch cascading operational line items
   const {
     data: items = [],
     isLoading,
@@ -42,7 +41,7 @@ export function useOrderDetails(
     mutationFn: async () => {
       if (!supabase || !orderId) return;
 
-      // 1. Delete associated child order items first to satisfy relational integrity constraints
+      //  Delete associated child order items first to satisfy relational integrity constraints
       const { error: itemsError } = await supabase
         .from("order_items")
         .delete()
@@ -50,7 +49,7 @@ export function useOrderDetails(
 
       if (itemsError) throw itemsError;
 
-      // 2. Delete the parent core transaction ledger order entry
+      //  Delete the parent core transaction ledger order entry
       const { error: orderError } = await supabase
         .from("orders")
         .delete()

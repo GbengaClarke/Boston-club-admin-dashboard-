@@ -79,7 +79,7 @@ export function OrderRow({
       {/* LAST SYSTEM REFRESH */}
       <td className="px-6 py-4">
         <div className="flex flex-col text-xs font-semibold text-slate-900">
-          <span>{new Date(order.updated_at).toLocaleDateString()}</span>
+          <span>{new Date(order.updated_at).toLocaleDateString("en-GB")}</span>
           <span className="text-slate-500 font-normal">
             {new Date(order.updated_at).toLocaleTimeString([], {
               hour: "2-digit",

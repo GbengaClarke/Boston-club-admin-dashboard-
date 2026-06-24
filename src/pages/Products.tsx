@@ -87,7 +87,7 @@ export function Products() {
           </h1>
           <p className="text-sm text-slate-500">
             Manage your premium footwear collection{" "}
-            <span className="font-bold text-slate-700">
+            <span className="font-bold whitespace-nowrap text-slate-700">
               {totalProducts ? `(${totalProducts} items)` : ""}
             </span>
           </p>

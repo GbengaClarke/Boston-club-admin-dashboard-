@@ -49,36 +49,36 @@ export function ReviewRow({
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       className={cn(
-        "border-b border-slate-100 hover:bg-slate-50/5 transition-colors group",
+        "border-b border-slate-200  transition-colors group",
         disabled && "opacity-40 pointer-events-none select-none"
       )}
     >
       {/* CUSTOMER */}
-      <td className="px-6 py-4">
+      <td className="px-6 py-4 vertical-align-top">
         <div className="flex flex-col">
-          <span className="font-bold text-slate-900">
+          <span className="font-semibold capitalize text-slate-900 text-sm">
             {review.profile?.full_name || "Anonymous User"}
           </span>
-          <span className="text-[11px] font-mono text-slate-400 mt-0.5">
+          <span className="text-xs font-medium text-slate-500 mt-0.5">
             {review.profile?.email || review.customer_id}
           </span>
         </div>
       </td>
 
       {/* PRODUCT */}
-      <td className="px-6 py-4 text-slate-700 font-medium whitespace-nowrap">
+      <td className="px-6 py-4 text-slate-900 font-medium text-sm whitespace-nowrap">
         {review.product_name || review.product?.name}
       </td>
 
       {/* RATING */}
       <td className="px-6 py-4">
-        <div className="flex items-center text-amber-400">
+        <div className="flex items-center text-amber-500">
           {Array.from({ length: 5 }).map((_, i) => (
             <Star
               key={i}
               className={cn(
-                "w-3.5 h-3.5",
-                i < review.rating ? "fill-current" : "text-slate-200"
+                "w-4 h-4 stroke-[2.5]",
+                i < review.rating ? "fill-current" : "text-slate-300"
               )}
             />
           ))}
@@ -86,20 +86,17 @@ export function ReviewRow({
       </td>
 
       {/* COMMENT */}
-      <td className="px-2  py-4 max-w-mdx min-w-80">
+      <td className="px-6 py-4 max-w-md min-w-[20rem]">
         <div
-          // layout
-          // transition={{ duration: 0.25 }}
           className={cn(
-            "rounded-xl transition-all duration-300",
-            isExpanded &&
-              "bg-gradient-to-br from-slate-50 to-white border border-slate-200 p-4 shadow-sm"
+            "rounded-xl transition-all duration-200",
+            isExpanded && "bg-slate-50 border border-slate-200 p-4 shadow-inner"
           )}
         >
           <p
             className={cn(
-              "text-slate-700 leading-relaxed break-words whitespace-normal",
-              isExpanded ? "text-sm font-normal" : "text-sm italic"
+              "text-slate-800 leading-relaxed break-words whitespace-normal text-sm",
+              isExpanded ? "font-normal" : "font-normal text-slate-700"
             )}
           >
             "{displayedComment}"
@@ -110,7 +107,7 @@ export function ReviewRow({
               type="button"
               onClick={onToggleExpand}
               className={cn(
-                "mt-3 inline-flex items-center gap-1 text-xs font-semibold transition-colors",
+                "mt-2.5 inline-flex items-center gap-1 text-xs font-bold transition-colors focus:outline-none focus:underline",
                 isExpanded
                   ? "text-slate-600 hover:text-slate-900"
                   : "text-indigo-600 hover:text-indigo-800"
@@ -118,12 +115,12 @@ export function ReviewRow({
             >
               {isExpanded ? (
                 <>
-                  <ChevronUp className="w-3.5 h-3.5" />
+                  <ChevronUp className="w-3.5 h-3.5 stroke-[2.5]" />
                   Collapse comment
                 </>
               ) : (
                 <>
-                  <ChevronDown className="w-3.5 h-3.5" />
+                  <ChevronDown className="w-3.5 h-3.5 stroke-[2.5]" />
                   Read full comment
                 </>
               )}
@@ -133,31 +130,31 @@ export function ReviewRow({
       </td>
 
       {/* CREATED AT */}
-      <td className="px-6 py-4 text-xs font-mono text-slate-400 whitespace-nowrap">
+      <td className="px-6 py-4 text-sm font-medium text-slate-600 whitespace-nowrap">
         {formattedDate}
       </td>
 
       {/* ACTIONS */}
       <td className="px-6 py-4 text-right whitespace-nowrap">
-        <div className="flex items-center justify-end gap-2">
+        <div className="flex items-center justify-end gap-1.5">
           {/* TOGGLE VISIBILITY */}
           <button
             type="button"
             onClick={() => onToggleDisplay(review.id, !review.is_displayed)}
             className={cn(
-              "p-1.5 rounded-md transition-all",
+              "p-2 rounded-lg transition-all border",
               review.is_displayed
-                ? "text-emerald-600 hover:bg-emerald-50"
-                : "text-slate-400 hover:bg-slate-100"
+                ? "text-emerald-700 bg-emerald-50 border-emerald-200 hover:bg-emerald-100 hover:text-emerald-800"
+                : "text-slate-600 bg-slate-50 border-slate-200 hover:bg-slate-100 hover:text-slate-900"
             )}
             title={
               review.is_displayed ? "Review is public" : "Review is hidden"
             }
           >
             {review.is_displayed ? (
-              <Eye className="w-4 h-4" />
+              <Eye className="w-4 h-4 stroke-[2.25]" />
             ) : (
-              <EyeOff className="w-4 h-4" />
+              <EyeOff className="w-4 h-4 stroke-[2.25]" />
             )}
           </button>
 
@@ -165,9 +162,10 @@ export function ReviewRow({
           <button
             type="button"
             onClick={() => onInitiateDelete(review.id)}
-            className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-md transition-all"
+            className="p-2 text-slate-600 bg-slate-50 border border-slate-200 hover:text-rose-700 hover:bg-rose-50 hover:border-rose-200 rounded-lg transition-all"
+            title="Delete review"
           >
-            <Trash2 className="w-4 h-4" />
+            <Trash2 className="w-4 h-4 stroke-[2.25]" />
           </button>
         </div>
       </td>
