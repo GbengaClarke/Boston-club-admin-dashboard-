@@ -43,7 +43,9 @@ export interface Order {
   total_price: number; // NUMERIC(10,2) maps to number
   status: OrderStatus; // Managed by our custom status type enum string
   created_at: string; // ISO Timestamp string format
-  updated_at: string; // ISO Timestamp string format
+  updated_at: string;
+  // ISO Timestamp string format
+  shipping_address:string
 }
 
 // 3. ORDER ITEMS INTERFACE (The Contents)

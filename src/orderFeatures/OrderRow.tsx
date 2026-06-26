@@ -95,7 +95,7 @@ export function OrderRow({
           value={order.status}
           onChange={(e) => onStatusChange(order.id, e.target.value)}
           className={cn(
-            "px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-widest rounded-lg border focus:ring-1 focus:ring-indigo-500/20 focus:outline-none appearance-none cursor-pointer w-32 shadow-sm transition-all",
+            "px-3 py-1.5 text-[10px] font-extrabold uppercase tracking-widest rounded-lg border focus:ring-1 focus:ring-indigo-500/20 focus:outline-none appearance-none cursor-pointer text-center w-32 shadow-sm transition-all",
             currentStatusConfig.className
           )}
         >

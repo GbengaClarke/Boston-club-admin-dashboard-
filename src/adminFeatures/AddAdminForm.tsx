@@ -3,9 +3,9 @@ import { UserPlus, Mail, User, Phone, ShieldAlert } from "lucide-react";
 import { useCreateAdmin } from "./useCreateAdmin";
 
 export function AddAdminForm() {
-  const [fullName, setFullName] = useState("Gbenga Clarke");
-  const [email, setEmail] = useState("gbengaclarke@gmail.com");
-  const [phone, setPhone] = useState("09078978574");
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [role, setRole] = useState<"admin" | "customer">("admin");
 
   const { createAdmin, isPending } = useCreateAdmin(() => {
@@ -54,8 +54,8 @@ export function AddAdminForm() {
               value={fullName}
               disabled={isPending}
               onChange={(e) => setFullName(e.target.value)}
-              placeholder="Olugbenga Michael"
-              className="w-full border border-slate-300 rounded-xl bg-white py-2 pl-10 pr-4 font-semibold text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 disabled:opacity-50 transition-shadow"
+              placeholder="John Doe"
+              className="w-full  border border-slate-300 rounded-xl bg-white py-2 pl-10 pr-4 font-semibold text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 disabled:opacity-50 transition-shadow"
             />
           </div>
         </div>
@@ -73,7 +73,7 @@ export function AddAdminForm() {
               value={email}
               disabled={isPending}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="michael@example.com"
+              placeholder="user@example.com"
               className="w-full border border-slate-300 rounded-xl bg-white py-2 pl-10 pr-4 font-semibold text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 disabled:opacity-50 transition-shadow"
             />
           </div>
@@ -94,7 +94,7 @@ export function AddAdminForm() {
               value={phone}
               disabled={isPending}
               onChange={(e) => setPhone(e.target.value)}
-              placeholder="09078978574"
+              placeholder="09012345678"
               className="w-full border border-slate-300 rounded-xl bg-white py-2 pl-10 pr-4 font-semibold text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 disabled:opacity-50 transition-shadow"
             />
           </div>

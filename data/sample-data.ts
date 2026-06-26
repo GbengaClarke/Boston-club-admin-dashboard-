@@ -1,705 +1,383 @@
-
-// import { supabase } from "@/src/lib/supabase";
-// import {
-//   Category,
-//   Material,
-//   Product,
-//   ProductImage,
-//   OrderStatus,
-//   CreateOrderInput,
-//   CreateOrderItemInput,
-// } from "@/src/types/ProductTypes";
-
-// // Local structural type definition for colors
-// export interface ColorOption {
-//   name: string;
-//   hex: string;
-// }
-
-// const imageMap: Record<Category, string> = {
-//   clogs:
-//     "https://iievuxppbwdnakmepltl.supabase.co/storage/v1/object/public/product-images/clog.webp",
-//   slides:
-//     "https://iievuxppbwdnakmepltl.supabase.co/storage/v1/object/public/product-images/slide.jpeg",
-//   sandals:
-//     "https://iievuxppbwdnakmepltl.supabase.co/storage/v1/object/public/product-images/sandal.jpeg",
-// };
-
-// const colorPalette: ColorOption[] = [
-//   { name: "Midnight Black", hex: "#1A1A1A" },
-//   { name: "Tan Suede", hex: "#D2B48C" },
-//   { name: "Espresso", hex: "#3E2723" },
-//   { name: "Stone Grey", hex: "#9E9E9E" },
-//   { name: "Olive Drab", hex: "#556B2F" },
-// ];
-
-// /**
-//  * 🧹 Core database cleaner helper function
-//  * Empties order details and catalog data systematically to respect relations.
-//  */
-// async function clearEntireDatabase() {
-//   console.log("🧹 Clearing cascading database tables...");
-
-//   // Wiping item content records first
-//   await supabase
-//     .from("order_items")
-//     .delete()
-//     .neq("id", "00000000-0000-0000-0000-000000000000");
-//   await supabase
-//     .from("orders")
-//     .delete()
-//     .neq("id", "00000000-0000-0000-0000-000000000000");
-//   await supabase
-//     .from("product_images")
-//     .delete()
-//     .neq("id", "00000000-0000-0000-0000-000000000000");
-
-//   const { error: productClearError } = await supabase
-//     .from("products")
-//     .delete()
-//     .neq("id", "00000000-0000-0000-0000-000000000000");
-
-//   if (productClearError) {
-//     throw new Error(`Failed to empty tables: ${productClearError.message}`);
-//   }
-// }
-
-// /**
-//  * Script to reset the database and upload 20 fresh products.
-//  */
-// export const uploadBostonClubCatalog = async (): Promise<void> => {
-//   await clearEntireDatabase();
-//   console.log("🚀 Starting fresh product catalog seed...");
-
-//   const categories: Category[] = ["clogs", "sandals", "slides"];
-//   const materials: Material[] = ["suede", "leather"];
-
-//   for (let i = 1; i <= 20; i++) {
-//     const selectedCategory =
-//       categories[Math.floor(Math.random() * categories.length)];
-//     const selectedMaterial =
-//       materials[Math.floor(Math.random() * materials.length)];
-//     const nairaPrice = Math.floor(Math.random() * (45000 - 9000) + 9000);
-
-//     const { data: product, error: productError } = await supabase
-//       .from("products")
-//       .insert({
-//         name: `Boston ${
-//           selectedMaterial.charAt(0).toUpperCase() + selectedMaterial.slice(1)
-//         } ${selectedCategory.slice(0, -1)} ${i}`,
-//         description: `Premium ${selectedMaterial} ${selectedCategory} featuring the iconic Boston Club silhouette.`,
-//         regularPrice: nairaPrice,
-//         discount: 10,
-//         isNewArrival: i <= 5,
-//         category: selectedCategory,
-//         material: selectedMaterial,
-//       })
-//       .select("id, name")
-//       .single();
-
-//     if (productError || !product) {
-//       console.error(`❌ Failed to insert product ${i}:`, productError?.message);
-//       continue;
-//     }
-
-//     const shuffledColors = [...colorPalette].sort(() => 0.5 - Math.random());
-//     const selectedColors = shuffledColors.slice(0, 2);
-
-//     const imageEntries = selectedColors.map((color, index) => ({
-//       product_id: product.id,
-//       image_url: imageMap[selectedCategory],
-//       color_name: color.name,
-//       color_hex: color.hex,
-//       is_main: index === 0,
-//     }));
-
-//     const { error: imageError } = await supabase
-//       .from("product_images")
-//       .insert(imageEntries);
-
-//     if (imageError) {
-//       console.error(
-//         `❌ Image error for product ${product.id}:`,
-//         imageError.message
-//       );
-//     } else {
-//       console.log(
-//         `✅ Added ${product.name} at ₦${nairaPrice.toLocaleString()}`
-//       );
-//     }
-//   }
-//   console.log("✨ Catalog successfully initialized.");
-// };
-
-// /**
-//  * Script to reset the database, assert base operational products exist,
-//  * and construct 12 transactional orders mapped to 30 relational line items.
-//  */
-// export const seedOrdersAndItems = async (): Promise<void> => {
-//   // 1. Wipe everything to secure explicit baseline state
-//   await clearEntireDatabase();
-
-//   // 2. Fetch a valid customer profile reference to fulfill constraints
-//   let { data: customerRow, error: customerErr } = await supabase
-//     .from("profiles")
-//     .select("id")
-//     .limit(1)
-//     .maybeSingle();
-
-//   // ✨ FIX: If no customer exists, dynamically spawn a dummy one!
-//   if (!customerRow) {
-//     console.log("👤 No customers found. Spawning a dummy customer profile...");
-
-//     const { data: newCustomer, error: createCustomerErr } = await supabase
-//       .from("profiles")
-//       .insert({
-//         // Adapt these fields to match your actual 'customers' table schema
-//         full_name: "John Doe (Seed Account)",
-//         email: "john.doe@example.com",
-//         phone: "+2348000000000",
-//       })
-//       .select("id")
-//       .single();
-
-//     if (createCustomerErr || !newCustomer) {
-//       throw new Error(
-//         `Failed to auto-create a seed customer: ${createCustomerErr?.message}`
-//       );
-//     }
-
-//     customerRow = newCustomer;
-//   }
-
-//   const customerId = customerRow.id;
-
-//   console.log("📦 Creating base product items for orders mapping...");
-//   // 3. Generate baseline items to guarantee data to link up with
-//   const baseCategories: Category[] = ["clogs", "slides"];
-//   const targetProductIds: string[] = [];
-//   const targetVariantIds: string[] = [];
-//   const variantPrices: Record<string, number> = {};
-
-//   for (let p = 1; p <= 5; p++) {
-//     const category = baseCategories[p % baseCategories.length];
-//     const basePrice = 25000 + p * 2000;
-
-//     const { data: prod } = await supabase
-//       .from("products")
-//       .insert({
-//         name: `Order Core ${category.toUpperCase()} Prototype v${p}`,
-//         description: "Seed anchor context variant item.",
-//         regularPrice: basePrice,
-//         discount: 0,
-//         isNewArrival: false,
-//         category: category,
-//         material: "leather" as Material,
-//       })
-//       .select("id")
-//       .single();
-
-//     if (prod) {
-//       targetProductIds.push(prod.id);
-
-//       const { data: img } = await supabase
-//         .from("product_images")
-//         .insert({
-//           product_id: prod.id,
-//           image_url: imageMap[category],
-//           color_name: "Raw Charcoal",
-//           color_hex: "#222222",
-//           is_main: true,
-//         })
-//         .select("id")
-//         .single();
-
-//       if (img) {
-//         targetVariantIds.push(img.id);
-//         variantPrices[img.id] = basePrice;
-//       }
-//     }
-//   }
-
-//   if (targetProductIds.length === 0 || targetVariantIds.length === 0) {
-//     throw new Error(
-//       "Aborting seed operation: Base production entities failed initialization lifecycle steps."
-//     );
-//   }
-
-//   console.log("📝 Building out 12 detailed mock orders...");
-//   const statuses: OrderStatus[] = [
-//     "pending",
-//     "paid",
-//     "processing",
-//     "shipped",
-//     "delivered",
-//   ];
-//   const orderIds: string[] = [];
-
-//   // 4. Inject 12 Base Orders
-//   for (let o = 1; o <= 12; o++) {
-//     const selectedStatus = statuses[o % statuses.length];
-//     const orderPayload: CreateOrderInput = {
-//       customer_id: customerId,
-//       total_price: 0, // Calculated dynamically during item generation mapping
-//       status: selectedStatus,
-//     };
-
-//     const { data: newOrder, error: orderErr } = await supabase
-//       .from("orders")
-//       .insert(orderPayload)
-//       .select("id")
-//       .single();
-
-//     if (orderErr || !newOrder) {
-//       console.error(
-//         "❌ Critical breakdown inserting order instance row:",
-//         orderErr?.message
-//       );
-//       continue;
-//     }
-//     orderIds.push(newOrder.id);
-//   }
-
-//   console.log(
-//     "🔗 Binding 30 contextual transactional lines across active orders..."
-//   );
-//   // 5. Structure exactly 30 distributed order item rows
-//   const itemsCountTarget = 30;
-//   const itemsBuffer: CreateOrderItemInput[] = [];
-//   const orderCalculatedTotals: Record<string, number> = {};
-
-//   for (let itemIdx = 0; itemIdx < itemsCountTarget; itemIdx++) {
-//     // Distribute systematically across generated order lines
-//     const assignedOrderId = orderIds[itemIdx % orderIds.length];
-
-//     // Choose random baseline reference item variant configurations
-//     const variantIdChoice = targetVariantIds[itemIdx % targetVariantIds.length];
-//     const matchingProductId =
-//       targetProductIds[targetVariantIds.indexOf(variantIdChoice)];
-//     const itemUnitPrice = variantPrices[variantIdChoice];
-//     const purchasedQuantity = (itemIdx % 3) + 1; // Produces varied mix values: 1, 2, or 3 units
-
-//     itemsBuffer.push({
-//       order_id: assignedOrderId,
-//       product_id: matchingProductId,
-//       variant_id: variantIdChoice,
-//       quantity: purchasedQuantity,
-//       unit_price: itemUnitPrice,
-//     });
-
-//     // Track total billing tallies per envelope container
-//     const totalLineCost = itemUnitPrice * purchasedQuantity;
-//     orderCalculatedTotals[assignedOrderId] =
-//       (orderCalculatedTotals[assignedOrderId] || 0) + totalLineCost;
-//   }
-
-//   // Flush buffer data directly into Supabase
-//   const { error: lineItemsFlushError } = await supabase
-//     .from("order_items")
-//     .insert(itemsBuffer);
-
-//   if (lineItemsFlushError) {
-//     console.error(
-//       "❌ Massive failure stacking order context item array elements:",
-//       lineItemsFlushError.message
-//     );
-//     return;
-//   }
-
-//   // 6. Sync computed checkout monetary pricing values back down to target parent records
-//   console.log(
-//     "🔄 Updating final aggregated billing figures on parent envelopes..."
-//   );
-//   for (const orderId of orderIds) {
-//     const finalBillAmount = orderCalculatedTotals[orderId] || 0;
-//     await supabase
-//       .from("orders")
-//       .update({ total_price: finalBillAmount })
-//       .eq("id", orderId);
-//   }
-
-//   console.log(
-//     "✨ Complete seeding structural execution finished successfully!"
-//   );
-// };
-
 import { supabase } from "@/src/lib/supabase";
 import {
   Category,
   Material,
-  Product,
-  ProductImage,
   OrderStatus,
-  CreateOrderInput,
-  CreateOrderItemInput,
 } from "@/src/types/ProductTypes";
 
-// Local structural type definition for colors
-export interface ColorOption {
+interface SeedProduct {
   name: string;
-  hex: string;
+  category: Category;
+  material: Material;
+  description: string;
+  basePrice: number;
+  discount: number; // Stored as absolute flat Naira values
+  isNewArrival: boolean;
+  images: { url: string; colorName: string; colorHex: string }[];
 }
 
-const imageMap: Record<Category, string> = {
-  clogs:
-    "https://iievuxppbwdnakmepltl.supabase.co/storage/v1/object/public/product-images/clog.webp",
-  slides:
-    "https://iievuxppbwdnakmepltl.supabase.co/storage/v1/object/public/product-images/slide.jpeg",
-  sandals:
-    "https://iievuxppbwdnakmepltl.supabase.co/storage/v1/object/public/product-images/sandal.jpeg",
-};
-
-const colorPalette: ColorOption[] = [
-  { name: "Midnight Black", hex: "#1A1A1A" },
-  { name: "Tan Suede", hex: "#D2B48C" },
-  { name: "Espresso", hex: "#3E2723" },
-  { name: "Stone Grey", hex: "#9E9E9E" },
-  { name: "Olive Drab", hex: "#556B2F" },
+// 1. Curated Footwear Catalog conforming strictly to Category and Material types
+const FOOTWEAR_CATALOG: SeedProduct[] = [
+  {
+    name: "Aero Stratus Slide",
+    category: "slides",
+    material: "leather",
+    description: "Ultra-cushioned recovery slides designed with ergonomic leather arch support and a lightweight responsive sole.",
+    basePrice: 24500,
+    discount: 0, // ₦1,500 off
+    isNewArrival: true,
+    images: [
+      { url: "https://images.unsplash.com/photo-1603487742131-4160ec999306?auto=format&fit=crop&w=600&q=80", colorName: "Bone White", colorHex: "#F5F5DC" },
+      { url: "https://images.unsplash.com/photo-1622141992941-114d49d0658e?auto=format&fit=crop&w=600&q=80", colorName: "Midnight Slate", colorHex: "#2F4F4F" }
+    ]
+  },
+  {
+    name: "Vanguard Nubuck Clog",
+    category: "clogs",
+    material: "suede",
+    description: "Premium water-resistant nubuck upper paired with a contoured cork footbed that molds perfectly to your footprint.",
+    basePrice: 58000,
+    discount: 5000, // ₦5,000 off
+    isNewArrival: false,
+    images: [
+      { url: "https://images.unsplash.com/photo-1608256246200-53e635b5b65f?auto=format&fit=crop&w=600&q=80", colorName: "Taupe Suede", colorHex: "#B38B6D" },
+      { url: "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?auto=format&fit=crop&w=600&q=80", colorName: "Espresso", colorHex: "#3E2723" }
+    ]
+  },
+  {
+    name: "Nomad Woven Sandal",
+    category: "sandals",
+    material: "leather",
+    description: "Handcrafted full-grain leather straps with a reinforced high-traction rubber outsole made for city tracking.",
+    basePrice: 42000,
+    discount: 0, //
+    isNewArrival: true,
+    images: [
+      { url: "https://images.unsplash.com/photo-1543163521-1bf539c55dd2?auto=format&fit=crop&w=600&q=80", colorName: "Tan Leather", colorHex: "#A0522D" },
+      { url: "https://images.unsplash.com/photo-1562273138-f46be4ebdf33?auto=format&fit=crop&w=600&q=80", colorName: "Onyx Black", colorHex: "#111111" }
+    ]
+  },
+  {
+    name: "Zenith Minimalist Slide",
+    category: "slides",
+    material: "leather",
+    description: "Sleek, architectural lines structured from single-piece butter soft calfskin leather for high-end lounging.",
+    basePrice: 35000,
+    discount: 3000, // ₦3,000 off
+    isNewArrival: false,
+    images: [
+      { url: "https://images.unsplash.com/photo-1560343090-f0409e92791a?auto=format&fit=crop&w=600&q=80", colorName: "Caramel", colorHex: "#C68E17" },
+      { url: "https://images.unsplash.com/photo-1539185441755-769473a23570?auto=format&fit=crop&w=600&q=80", colorName: "Chalk", colorHex: "#EAEAEA" }
+    ]
+  },
+  {
+    name: "Meridian Trail Sandal",
+    category: "sandals",
+    material: "leather",
+    description: "Heavy-duty utilitarian trail sandal featuring fast-drying tech straps and shock-absorbing premium leather wrap linings.",
+    basePrice: 48500,
+    discount: 800, // ₦800 off
+    isNewArrival: false,
+    images: [
+      { url: "https://images.unsplash.com/photo-1606107557195-0e29a4b5b4aa?auto=format&fit=crop&w=600&q=80", colorName: "Sage Green", colorHex: "#8F9779" },
+      { url: "https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=600&q=80", colorName: "Crimson Accent", colorHex: "#990000" }
+    ]
+  },
+  {
+    name: "Harbor Suede Mule",
+    category: "clogs",
+    material: "suede",
+    description: "An elegant closed-toe transition slipper lined with deep shearling wool insulation for premier luxury comfort.",
+    basePrice: 62000,
+    discount: 6500, // ₦6,500 off
+    isNewArrival: false,
+    images: [
+      { url: "https://images.unsplash.com/photo-1549298916-b41d501d3772?auto=format&fit=crop&w=600&q=80", colorName: "Sand Suede", colorHex: "#E6C2A0" },
+      { url: "https://images.unsplash.com/photo-1525966222134-fcfa99b8ae77?auto=format&fit=crop&w=600&q=80", colorName: "Charcoal Grey", colorHex: "#555555" }
+    ]
+  },
+  {
+    name: "Apex Hydro Slide",
+    category: "slides",
+    material: "leather",
+    description: "Waterproof Treated leather slides engineered for wet transitions, featuring channeled footbeds for instant drainage.",
+    basePrice: 19000,
+    discount: 1200, // ₦1,200 off
+    isNewArrival: false,
+    images: [
+      { url: "https://images.unsplash.com/photo-1539185441755-769473a23570?auto=format&fit=crop&w=600&q=80", colorName: "Pacific Blue", colorHex: "#4682B4" },
+      { url: "https://images.unsplash.com/photo-1515955656352-a1fa3ffcd111?auto=format&fit=crop&w=600&q=80", colorName: "Signal Orange", colorHex: "#FF4500" }
+    ]
+  },
+  {
+    name: "Terrace Classic Clog",
+    category: "clogs",
+    material: "leather",
+    description: "Vintage-inspired heritage clogs fitted with an oiled pull-up leather shell and durable brass structural rivets.",
+    basePrice: 55000,
+    discount: 4000, // ₦4,000 off
+    isNewArrival: true,
+    images: [
+      { url: "https://images.unsplash.com/photo-1600185365483-26d7a4cc7519?auto=format&fit=crop&w=600&q=80", colorName: "Chestnut", colorHex: "#8B4513" },
+      { url: "https://images.unsplash.com/photo-1597045566677-8cf032ed6634?auto=format&fit=crop&w=600&q=80", colorName: "Black Grain", colorHex: "#1C1C1C" }
+    ]
+  },
+  {
+    name: "Odyssey Exploration Sandal",
+    category: "sandals",
+    material: "leather",
+    description: "Multi-terrain outsoles coupled with variable lock buckle architectures, offering stability on variable surfaces.",
+    basePrice: 51000,
+    discount: 1000, // ₦1,000 off
+    isNewArrival: false,
+    images: [
+      { url: "https://images.unsplash.com/photo-1575537302964-96cd47c06b1b?auto=format&fit=crop&w=600&q=80", colorName: "Desert Mud", colorHex: "#705335" },
+      { url: "https://images.unsplash.com/photo-1511556532299-8f662fc26c06?auto=format&fit=crop&w=600&q=80", colorName: "Stealth", colorHex: "#232323" }
+    ]
+  },
+  {
+    name: "Garrison Utility Clog",
+    category: "clogs",
+    material: "suede",
+    description: "Industrial strength composite architecture paired with a rich weatherized suede layer for durability and design.",
+    basePrice: 33000,
+    discount: 0, 
+    isNewArrival: false,
+    images: [
+      { url: "https://images.unsplash.com/photo-1603487742131-4160ec999306?auto=format&fit=crop&w=600&q=80", colorName: "Industrial Navy", colorHex: "#002040" },
+      { url: "https://images.unsplash.com/photo-1516478177764-9fe5bd7e9717?auto=format&fit=crop&w=600&q=80", colorName: "Ash Grey", colorHex: "#B0C4DE" }
+    ]
+  }
 ];
 
-const MOCK_COMMENTS = [
+// 2. Comprehensive Review Pools (Balanced Sentiments)
+const POSITIVE_COMMENTS = [
   "Incredibly comfortable! Feels premium and fits perfectly true to size.",
   "The suede finish is absolutely stunning. Love the attention to detail.",
   "Fast shipping here to Lagos. Highly recommend this brand!",
-  "Extremely stylish and versatile. Perfect for both casual and semi-formal wear.",
-  "The leather is exceptionally soft. Excellent value for money.",
-  "Got so many compliments wearing these slides today. Outstanding craftsmanship!",
-  "Exactly as described, maybe even better in person. 10/10 comfortable soles."
+  "Extremely stylish and versatile. Perfect for daily wear.",
+  "The leather is exceptionally soft. Excellent value for money."
+];
+
+const BAD_COMMENTS = [
+  "The sole started splitting after just two weeks of use. Disappointed for this price point.",
+  "Sizing runs way too tight and narrow across the bridge. Consider sizing up.",
+  "Shipping took forever to get to Ikeja, and the original box arrived completely smashed.",
+  "The material feels much stiffer in person than the luxury product description suggests.",
+  "Gave me rough blisters on my heel during the first walk. The inner stitching feels unrefined."
+];
+
+// 3. High-Quality Nigerian Address Vectors
+const REALISTIC_ADDRESSES = [
+  "Block 42, Flat 4, Alhaji Masha Road, Surulere, Lagos",
+  "12 Banana Island Road, Ikoyi, Lagos",
+  "Apt 3B, 15 Ademola Adetokunbo Crescent, Wuse II, Abuja",
+  "45 Ghafe Close, off Peter Odili Road, Port Harcourt, Rivers",
+  "76 Ring Road, near Challenge Roundabout, Ibadan, Oyo",
+  "5B Admiralty Way, Lekki Phase 1, Lagos"
 ];
 
 /**
- * 🧹 Core database cleaner helper function
- * Empties order details, reviews, and catalog data systematically to respect relational cascades.
+ * Ensures the target seed customer exists and returns its primary key ID.
  */
-async function clearEntireDatabase() {
-  console.log("🧹 Clearing cascading database tables...");
-
-  // 1. Wipe dependent reviews first to clear product foreign key constraints
-  await supabase
-    .from("reviews")
-    .delete()
-    .neq("id", "00000000-0000-0000-0000-000000000000");
-
-  // 2. Wipe item content records
-  await supabase
-    .from("order_items")
-    .delete()
-    .neq("id", "00000000-0000-0000-0000-000000000000");
-
-  // 3. Wipe parent orders
-  await supabase
-    .from("orders")
-    .delete()
-    .neq("id", "00000000-0000-0000-0000-000000000000");
-
-  // 4. Wipe product images
-  await supabase
-    .from("product_images")
-    .delete()
-    .neq("id", "00000000-0000-0000-0000-000000000000");
-
-  // 5. Delete products catalog
-  const { error: productClearError } = await supabase
-    .from("products")
-    .delete()
-    .neq("id", "00000000-0000-0000-0000-000000000000");
-
-  if (productClearError) {
-    throw new Error(`Failed to empty tables: ${productClearError.message}`);
-  }
-}
-
-/**
- * Resolves a customer profile ID, creating a fallback John Doe customer if none exists.
- */
-async function getOrCreateCustomer(): Promise<string> {
-  let { data: customerRow } = await supabase
+async function getOrCreateTargetCustomer(): Promise<string> {
+  const { data: existingProfile } = await supabase
     .from("profiles")
     .select("id")
-    .limit(1)
+    .eq("email", "sample@test.com")
     .maybeSingle();
 
-  if (!customerRow) {
-    console.log("👤 No customers found. Spawning a dummy customer profile...");
-
-    const { data: newCustomer, error: createCustomerErr } = await supabase
-      .from("profiles")
-      .insert({
-        full_name: "John Doe (Seed Account)",
-        email: "john.doe@example.com",
-        phone: "+2348000000000",
-      })
-      .select("id")
-      .single();
-
-    if (createCustomerErr || !newCustomer) {
-      throw new Error(
-        `Failed to auto-create a seed customer: ${createCustomerErr?.message}`
-      );
-    }
-    return newCustomer.id;
+  if (existingProfile) {
+    return existingProfile.id;
   }
 
-  return customerRow.id;
+  console.log("👤 Provisioning central test user profile (sample@test.com)...");
+  const { data: newProfile, error: profileErr } = await supabase
+    .from("profiles")
+    .insert({
+      full_name: "Micheal O. (Sample Account)",
+      email: "sample@test.com",
+      phone: "+2348030001122",
+    })
+    .select("id")
+    .single();
+
+  if (profileErr || !newProfile) {
+    throw new Error(`Failed to initialize central profile target: ${profileErr?.message}`);
+  }
+
+  return newProfile.id;
+}
+
+async function clearEntireDatabase() {
+  console.log("🧹 Clearing cascading database tables safely...");
+  await supabase.from("reviews").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+  await supabase.from("order_items").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+  await supabase.from("orders").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+  await supabase.from("product_images").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+  await supabase.from("products").delete().neq("id", "00000000-0000-0000-0000-000000000000");
 }
 
 /**
- * Script to reset the database and upload 20 fresh products along with corresponding reviews.
+ * 🚀 MAIN STOREFRONT SEED PIPELINE
  */
-export const uploadBostonClubCatalog = async (): Promise<void> => {
-  await clearEntireDatabase();
-  console.log("🚀 Starting fresh product catalog seed...");
+export const seedCompleteStoreDataset = async (): Promise<void> => {
+  try {
+    await clearEntireDatabase();
+    console.log("🚀 Starting fresh analytical database seed...");
 
-  const customerId = await getOrCreateCustomer();
-  const categories: Category[] = ["clogs", "sandals", "slides"];
-  const materials: Material[] = ["suede", "leather"];
+    // Resolve unified customer profile context
+    const masterCustomerId = await getOrCreateTargetCustomer();
 
-  for (let i = 1; i <= 20; i++) {
-    const selectedCategory =
-      categories[Math.floor(Math.random() * categories.length)];
-    const selectedMaterial =
-      materials[Math.floor(Math.random() * materials.length)];
-    const nairaPrice = Math.floor(Math.random() * (45000 - 9000) + 9000);
-    const productName = `Boston ${
-      selectedMaterial.charAt(0).toUpperCase() + selectedMaterial.slice(1)
-    } ${selectedCategory.slice(0, -1)} ${i}`;
+    console.log("👟 Provisioning catalog products and variant configurations...");
+    const injectedProducts: { id: string; name: string; regularPrice: number; discount: number }[] = [];
+    const productToVariantMap: Record<string, string[]> = {};
+    const variantPriceMap: Record<string, number> = {};
 
-    const { data: product, error: productError } = await supabase
-      .from("products")
-      .insert({
-        name: productName,
-        description: `Premium ${selectedMaterial} ${selectedCategory} featuring the iconic Boston Club silhouette.`,
-        regularPrice: nairaPrice,
-        discount: 10,
-        isNewArrival: i <= 5,
-        category: selectedCategory,
-        material: selectedMaterial,
-      })
-      .select("id, name")
-      .single();
-
-    if (productError || !product) {
-      console.error(`❌ Failed to insert product ${i}:`, productError?.message);
-      continue;
-    }
-
-    // Insert Product Colors and Images
-    const shuffledColors = [...colorPalette].sort(() => 0.5 - Math.random());
-    const selectedColors = shuffledColors.slice(0, 2);
-
-    const imageEntries = selectedColors.map((color, index) => ({
-      product_id: product.id,
-      image_url: imageMap[selectedCategory],
-      color_name: color.name,
-      color_hex: color.hex,
-      is_main: index === 0,
-    }));
-
-    const { error: imageError } = await supabase
-      .from("product_images")
-      .insert(imageEntries);
-
-    if (imageError) {
-      console.error(`❌ Image error for product ${product.id}:`, imageError.message);
-    } else {
-      console.log(`✅ Added ${product.name} at ₦${nairaPrice.toLocaleString()}`);
-    }
-
-    // Insert Product Reviews (1 to 2 random positive reviews per product)
-    const reviewsToCreate = Math.floor(Math.random() * 2) + 1;
-    const reviewPayloads = [];
-
-    for (let r = 0; r < reviewsToCreate; r++) {
-      const commentIndex = Math.floor(Math.random() * MOCK_COMMENTS.length);
-      reviewPayloads.push({
-        product_id: product.id,
-        customer_id: customerId,
-        rating: Math.floor(Math.random() * 2) + 4, // Generates 4 or 5 stars
-        comment: MOCK_COMMENTS[commentIndex],
-        is_displayed: true,
-        product_name: product.name,
-      });
-    }
-
-    const { error: reviewError } = await supabase
-      .from("reviews")
-      .insert(reviewPayloads);
-
-    if (reviewError) {
-      console.error(`❌ Review seeding error for product ${product.id}:`, reviewError.message);
-    } else {
-      console.log(`💬 Added ${reviewsToCreate} review(s) for ${product.name}`);
-    }
-  }
-  console.log("✨ Catalog successfully initialized with reviews.");
-};
-
-/**
- * Script to reset the database, assert base operational products exist,
- * and construct 12 transactional orders mapped to 30 relational line items and custom reviews.
- */
-export const seedOrdersAndItems = async (): Promise<void> => {
-  // 1. Wipe everything to secure explicit baseline state
-  await clearEntireDatabase();
-
-  // 2. Fetch or create customer profile
-  const customerId = await getOrCreateCustomer();
-
-  console.log("📦 Creating base product items for orders mapping...");
-  // 3. Generate baseline items to guarantee link relationships
-  const baseCategories: Category[] = ["clogs", "slides"];
-  const targetProductIds: string[] = [];
-  const targetVariantIds: string[] = [];
-  const variantPrices: Record<string, number> = {};
-
-  for (let p = 1; p <= 5; p++) {
-    const category = baseCategories[p % baseCategories.length];
-    const basePrice = 25000 + p * 2000;
-    const productName = `Order Core ${category.toUpperCase()} Prototype v${p}`;
-
-    const { data: prod } = await supabase
-      .from("products")
-      .insert({
-        name: productName,
-        description: "Seed anchor context variant item.",
-        regularPrice: basePrice,
-        discount: 0,
-        isNewArrival: false,
-        category: category,
-        material: "leather" as Material,
-      })
-      .select("id, name")
-      .single();
-
-    if (prod) {
-      targetProductIds.push(prod.id);
-
-      const { data: img } = await supabase
-        .from("product_images")
+    for (const item of FOOTWEAR_CATALOG) {
+      const { data: prod, error: pErr } = await supabase
+        .from("products")
         .insert({
-          product_id: prod.id,
-          image_url: imageMap[category],
-          color_name: "Raw Charcoal",
-          color_hex: "#222222",
-          is_main: true,
+          name: item.name,
+          description: item.description,
+          regularPrice: item.basePrice,
+          discount: item.discount, 
+          isNewArrival: item.isNewArrival,
+          category: item.category,
+          material: item.material,
         })
-        .select("id")
+        .select("id, name, regularPrice, discount")
         .single();
 
-      if (img) {
-        targetVariantIds.push(img.id);
-        variantPrices[img.id] = basePrice;
+      if (pErr || !prod) {
+        console.error(`❌ Setup failed for ${item.name}:`, pErr?.message);
+        continue;
       }
 
-      // Add simple review validation to base orders products as well
-      const commentIndex = Math.floor(Math.random() * MOCK_COMMENTS.length);
+      injectedProducts.push(prod);
+      productToVariantMap[prod.id] = [];
+
+      // Add minimum 2 carousel image variants per item
+      for (let idx = 0; idx < item.images.length; idx++) {
+        const imgAsset = item.images[idx];
+        const { data: vRow } = await supabase
+          .from("product_images")
+          .insert({
+            product_id: prod.id,
+            image_url: imgAsset.url,
+            color_name: imgAsset.colorName,
+            color_hex: imgAsset.colorHex,
+            is_main: idx === 0,
+          })
+          .select("id")
+          .single();
+
+        if (vRow) {
+          productToVariantMap[prod.id].push(vRow.id);
+          // Variant baseline checkout captures calculation: BasePrice minus Flat Discount
+          variantPriceMap[vRow.id] = Math.max(0, prod.regularPrice - prod.discount);
+        }
+      }
+
+      // Add structured sentiment reviews per product
+      const leavesPositive = Math.random() > 0.3; 
+      const reviewComment = leavesPositive 
+        ? POSITIVE_COMMENTS[Math.floor(Math.random() * POSITIVE_COMMENTS.length)]
+        : BAD_COMMENTS[Math.floor(Math.random() * BAD_COMMENTS.length)];
+      const reviewRating = leavesPositive ? Math.floor(Math.random() * 2) + 4 : Math.floor(Math.random() * 2) + 1;
+
       await supabase.from("reviews").insert({
         product_id: prod.id,
-        customer_id: customerId,
-        rating: 5,
-        comment: MOCK_COMMENTS[commentIndex],
+        customer_id: masterCustomerId,
+        rating: reviewRating,
+        comment: reviewComment,
         is_displayed: true,
         product_name: prod.name,
       });
     }
-  }
 
-  if (targetProductIds.length === 0 || targetVariantIds.length === 0) {
-    throw new Error(
-      "Aborting seed operation: Base production entities failed initialization lifecycle steps."
-    );
-  }
+    // 4. Construct 30 Time-Distributed Orders
+    console.log("📝 Disbursing 30 analytical order fields over a 90-day trajectory...");
+    const orderIdsPool: string[] = [];
 
-  console.log("📝 Building out 12 detailed mock orders...");
-  const statuses: OrderStatus[] = [
-    "pending",
-    "paid",
-    "processing",
-    "shipped",
-    "delivered",
-  ];
-  const orderIds: string[] = [];
+    for (let oIdx = 1; oIdx <= 30; oIdx++) {
+      const targetAddress = REALISTIC_ADDRESSES[oIdx % REALISTIC_ADDRESSES.length];
+      
+      // Dynamic metric weights for status distributions
+      let computedStatus: OrderStatus = "delivered";
+      if (oIdx % 9 === 0) computedStatus = "cancelled";
+      else if (oIdx % 7 === 0) computedStatus = "refunded";
+      else if (oIdx % 5 === 0) computedStatus = "pending";
+      else if (oIdx % 4 === 0) computedStatus = "shipped";
+      else if (oIdx % 3 === 0) computedStatus = "processing";
 
-  // 4. Inject 12 Base Orders
-  for (let o = 1; o <= 12; o++) {
-    const selectedStatus = statuses[o % statuses.length];
-    const orderPayload: CreateOrderInput = {
-      customer_id: customerId,
-      total_price: 0,
-      status: selectedStatus,
-    };
+      // Linear historical mathematical spread
+      const daysAgo = Math.floor((oIdx / 30) * 90) + (oIdx % 3);
+      const generatedDate = new Date();
+      generatedDate.setDate(generatedDate.getDate() - daysAgo);
 
-    const { data: newOrder, error: orderErr } = await supabase
-      .from("orders")
-      .insert(orderPayload)
-      .select("id")
-      .single();
+      const { data: newOrder, error: oErr } = await supabase
+        .from("orders")
+        .insert({
+          customer_id: masterCustomerId,
+          total_price: 0, // Calculated dynamically below
+          status: computedStatus,
+          shipping_address: targetAddress,
+          created_at: generatedDate.toISOString(),
+          updated_at: generatedDate.toISOString(),
+        })
+        .select("id")
+        .single();
 
-    if (orderErr || !newOrder) {
-      console.error(
-        "❌ Critical breakdown inserting order instance row:",
-        orderErr?.message
-      );
-      continue;
+      if (oErr || !newOrder) {
+        console.error(`❌ Order creation fault at index ${oIdx}:`, oErr?.message);
+        continue;
+      }
+      orderIdsPool.push(newOrder.id);
     }
-    orderIds.push(newOrder.id);
+
+    // 5. Populate relational order items and finalize calculations
+    console.log("🔗 Binding distributed line item purchases...");
+    const orderTotalsMap: Record<string, number> = {};
+
+    for (let iIdx = 0; iIdx < orderIdsPool.length; iIdx++) {
+      const assignedOrderId = orderIdsPool[iIdx];
+      const itemsToBuy = (iIdx % 5 === 0) ? 2 : 1; // Mixed item clusters
+
+      for (let purchaseNum = 0; purchaseNum < itemsToBuy; purchaseNum++) {
+        const selectedProd = injectedProducts[(iIdx + purchaseNum) % injectedProducts.length];
+        const variantsAvailable = productToVariantMap[selectedProd.id];
+        
+        if (!variantsAvailable || variantsAvailable.length === 0) continue;
+        
+        const selectedVariantId = variantsAvailable[purchaseNum % variantsAvailable.length];
+        const computedCheckoutPrice = variantPriceMap[selectedVariantId];
+        const qty = (iIdx % 2) + 1; // Quantities of 1 or 2 items
+
+        await supabase.from("order_items").insert({
+          order_id: assignedOrderId,
+          product_id: selectedProd.id,
+          variant_id: selectedVariantId,
+          quantity: qty,
+          unit_price: computedCheckoutPrice,
+        });
+
+        orderTotalsMap[assignedOrderId] = (orderTotalsMap[assignedOrderId] || 0) + (computedCheckoutPrice * qty);
+      }
+    }
+
+    // 6. Re-sync calculated aggregates back to parent records
+    console.log("🔄 Finalizing financial aggregations across parent tables...");
+    for (const orderId of orderIdsPool) {
+      const billAmount = orderTotalsMap[orderId] || 0;
+      await supabase
+        .from("orders")
+        .update({ total_price: billAmount })
+        .eq("id", orderId);
+    }
+
+    console.log("✨ Database successfully seeded! All dashboard metrics are live.");
+  } catch (error: any) {
+    console.error("❌ Master seed script encountered an unhandled exception:", error.message);
   }
-
-  console.log(
-    "🔗 Binding 30 contextual transactional lines across active orders..."
-  );
-  // 5. Structure exactly 30 distributed order item rows
-  const itemsCountTarget = 30;
-  const itemsBuffer: CreateOrderItemInput[] = [];
-  const orderCalculatedTotals: Record<string, number> = {};
-
-  for (let itemIdx = 0; itemIdx < itemsCountTarget; itemIdx++) {
-    const assignedOrderId = orderIds[itemIdx % orderIds.length];
-    const variantIdChoice = targetVariantIds[itemIdx % targetVariantIds.length];
-    const matchingProductId =
-      targetProductIds[targetVariantIds.indexOf(variantIdChoice)];
-    const itemUnitPrice = variantPrices[variantIdChoice];
-    const purchasedQuantity = (itemIdx % 3) + 1;
-
-    itemsBuffer.push({
-      order_id: assignedOrderId,
-      product_id: matchingProductId,
-      variant_id: variantIdChoice,
-      quantity: purchasedQuantity,
-      unit_price: itemUnitPrice,
-    });
-
-    const totalLineCost = itemUnitPrice * purchasedQuantity;
-    orderCalculatedTotals[assignedOrderId] =
-      (orderCalculatedTotals[assignedOrderId] || 0) + totalLineCost;
-  }
-
-  // Flush buffer data directly into Supabase
-  const { error: lineItemsFlushError } = await supabase
-    .from("order_items")
-    .insert(itemsBuffer);
-
-  if (lineItemsFlushError) {
-    console.error(
-      "❌ Massive failure stacking order context item array elements:",
-      lineItemsFlushError.message
-    );
-    return;
-  }
-
-  // 6. Sync computed checkout totals back to parent records
-  console.log(
-    "🔄 Updating final aggregated billing figures on parent envelopes..."
-  );
-  for (const orderId of orderIds) {
-    const finalBillAmount = orderCalculatedTotals[orderId] || 0;
-    await supabase
-      .from("orders")
-      .update({ total_price: finalBillAmount })
-      .eq("id", orderId);
-  }
-
-  console.log(
-    "✨ Complete seeding structural execution finished successfully!"
-  );
 };

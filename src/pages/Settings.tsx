@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { useCurrentUser } from "../adminFeatures/useCurrentUser";
 import { useUpdateSettings } from "../adminFeatures/useUpdateSettings";
 import { User, Lock, Upload, Loader2, KeyRound } from "lucide-react";
@@ -135,7 +135,7 @@ export function Settings() {
                 type="text"
                 name="fullName"
                 defaultValue={userProfile?.full_name || ""}
-                className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-300 rounded-lg placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all duration-150"
+                className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-300 capitalize rounded-lg placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all duration-150"
                 placeholder="Enter display name..."
               />
             </div>
