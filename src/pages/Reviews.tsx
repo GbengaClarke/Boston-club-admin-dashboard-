@@ -125,7 +125,7 @@ export function Reviews() {
             Review Management
           </h1>
           <p className="text-sm text-slate-500">
-            Monitor client feedback profiles and verify layout displays.{" "}
+            Monitor and Manage client feedback profiles.
             <span className="font-bold whitespace-nowrap text-slate-700">
               {totalReviews ? `(${totalReviews} matched)` : ""}
             </span>

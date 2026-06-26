@@ -60,7 +60,7 @@ export function useCreateAdmin(onSuccessCallback?: (devLink?: string) => void) {
     
     onSuccess: (data) => {
       // This block fires ONLY if the user was successfully created AND the invite email went through
-      toast.success("Account created! We've sent an invitation link to their email.");
+      toast.success("Account initiated! We've sent an invitation link to their email.");
       
       // Automatically refresh any active profile listings running on your dashboard
       queryClient.invalidateQueries({ queryKey: ["profiles"] });

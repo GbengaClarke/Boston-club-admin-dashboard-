@@ -102,7 +102,7 @@ export function Orders() {
             Order Management
           </h1>
           <p className="text-sm text-slate-500">
-            Monitor fulfillment metrics and track payments.{" "}
+            View records and manage order fulfillment.
             <span className="font-bold whitespace-nowrap text-slate-700">
               {totalOrders ? `(${totalOrders} orders)` : ""}
             </span>

@@ -39,8 +39,7 @@ export function Profiles() {
             Profiles
           </h1>
           <p className="text-sm text-slate-500">
-            View registered system profiles, assign access contexts, and manage
-            parameters.{" "}
+            View registered system profiles.{" "}
             <span className="font-bold whitespace-nowrap text-slate-700">
               {totalCount ? `(${totalCount} matched)` : ""}
             </span>
