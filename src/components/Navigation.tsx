@@ -9,7 +9,7 @@ import { IoPersonAddOutline } from "react-icons/io5";
 import { GiSlippers } from "react-icons/gi";
 import { cn } from "../lib/utils";
 import { useLocation, Link } from "react-router-dom";
-import { SeedOperations } from "./SeedOperations";
+// import { SeedOperations } from "./SeedOperations";
 
 interface SidebarProps {
   className?: string;
@@ -47,7 +47,7 @@ export function Sidebar({ className, onClose }: SidebarProps) {
 
       {/* Scrollable Content Area */}
       <div className="flex-1  overflow-y-auto custom-scrollbar">
-        <SeedOperations />
+        {/* <SeedOperations /> */}
 
         <div className="px-4 py-4  flex flex-col gap-1">
           {navItems.map((item) => (
