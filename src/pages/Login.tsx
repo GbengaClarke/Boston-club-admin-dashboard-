@@ -293,16 +293,13 @@ export function Login() {
   };
 
   return (
-    /* 1. Added base horizontal padding (px-4) and responsive vertical padding to prevent clipping on short viewports */
     <div className="min-h-screen bg-slate-50 flex flex-col justify-center py-8 px-4 sm:py-12 sm:px-6 lg:px-8">
-      {/* 2. Unified width constraint logic via w-full max-w-md mx-auto */}
       <div className="w-full max-w-md mx-auto">
         <div className="flex justify-center">
           <div className="w-12 h-12 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-bold text-xl shadow-sm">
             <GiSlippers />
           </div>
         </div>
-        {/* 3. Scaled down title font size on mobile (text-2xl) to prevent line wrapping */}
         <h2 className="mt-4 text-center text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
           Boston Club Admin
         </h2>
@@ -312,7 +309,6 @@ export function Login() {
       </div>
 
       <div className="mt-6 sm:mt-8 w-full max-w-md mx-auto">
-        {/* 4. Made padding tighter on mobile (p-5) and spacious on desktop (sm:p-10) */}
         <div className="bg-white py-6 px-5 shadow-sm rounded-xl sm:rounded-2xl sm:p-10 border border-slate-300">
           <form className="space-y-5 sm:space-y-6" onSubmit={handleLogin}>
             {error && (
