@@ -96,7 +96,7 @@ export const ORDER_STATUS_CONFIG: Record<
   { className: string; label: string }
 > = {
   pending: {
-    className: "bg-amber-50 text-amber-700 border-amber-100 hover:bg-amber-100",
+    className: "bg-amber-50  text-amber-700 border-amber-100 hover:bg-amber-100",
     label: "Pending",
   },
   paid: {

@@ -10,13 +10,13 @@ interface AddProductFormProps {
 
 function AddProductForm({ setShowForm }: AddProductFormProps) {
   const [images, setImages] = useState<File[]>([]);
-  const [name, setName] = useState("product 1");
-  const [description, setDescription] = useState("sike mf");
-  const [regularPrice, setRegularPrice] = useState("10000");
-  const [discount, setDiscount] = useState("10");
-  const [category, setCategory] = useState("clogs");
-  const [material, setMaterial] = useState("leather");
-  const [colorName, setColorName] = useState("Almond");
+  const [name, setName] = useState("");
+  const [description, setDescription] = useState("");
+  const [regularPrice, setRegularPrice] = useState("");
+  const [discount, setDiscount] = useState("");
+  const [category, setCategory] = useState("");
+  const [material, setMaterial] = useState("");
+  const [colorName, setColorName] = useState("");
   const [colorHex, setColorHex] = useState("#8B5A2B");
 
   const { createProduct, isCreating } = useAddProduct();
@@ -142,7 +142,7 @@ function AddProductForm({ setShowForm }: AddProductFormProps) {
               disabled={isCreating}
               value={regularPrice}
               onChange={(e) => setRegularPrice(e.target.value)}
-              placeholder="12500"
+              placeholder="₦13,000"
               className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 font-medium placeholder-slate-400 outline-none transition-all focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 disabled:bg-slate-50 disabled:cursor-not-allowed"
             />
           </div>
@@ -153,7 +153,7 @@ function AddProductForm({ setShowForm }: AddProductFormProps) {
               htmlFor="product-discount"
               className="block text-xs font-bold tracking-wider uppercase text-slate-700 mb-2"
             >
-              Discount %
+              Discount
             </label>
             <input
               id="product-discount"
@@ -161,7 +161,7 @@ function AddProductForm({ setShowForm }: AddProductFormProps) {
               disabled={isCreating}
               value={discount}
               onChange={(e) => setDiscount(e.target.value)}
-              placeholder="10"
+              placeholder="₦1500"
               className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 font-medium placeholder-slate-400 outline-none transition-all focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 disabled:bg-slate-50 disabled:cursor-not-allowed"
             />
           </div>
