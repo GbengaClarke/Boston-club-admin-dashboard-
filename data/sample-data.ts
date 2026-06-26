@@ -209,7 +209,7 @@ async function getOrCreateTargetCustomer(): Promise<string> {
   return newProfile.id;
 }
 
-async function clearEntireDatabase() {
+export async function clearEntireDatabase() {
   console.log("🧹 Clearing cascading database tables safely...");
   await supabase.from("reviews").delete().neq("id", "00000000-0000-0000-0000-000000000000");
   await supabase.from("order_items").delete().neq("id", "00000000-0000-0000-0000-000000000000");
