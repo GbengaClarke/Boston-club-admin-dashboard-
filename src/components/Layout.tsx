@@ -4,6 +4,7 @@ import { useState } from "react";
 import { cn } from "../lib/utils";
 import { Header } from "./Header";
 import { Footer } from "./Footer";
+import { ErrorBoundary } from "../components/ErrorBoundary";
 
 export function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -25,7 +26,6 @@ export function Layout() {
       </div>
 
       {/* smaller screen Sidebar */}
-
       <div
         className={cn(
           "fixed inset-y-0 left-0 z-30 md:hidden transform transition-transform duration-300 ease-in-out",
@@ -41,7 +41,9 @@ export function Layout() {
 
         <div className="flex-1 overflow-y-auto">
           <main className="py-6 px-4 lg:p-8 max-w-7xl mx-auto flex flex-col gap-8">
-            <Outlet />
+            <ErrorBoundary>
+              <Outlet />
+            </ErrorBoundary>
           </main>
 
           <Footer />
