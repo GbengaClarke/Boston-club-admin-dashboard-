@@ -1,8 +1,8 @@
 export function DashboardSkeleton() {
   return (
-    <div className="space-y-6 max-w-7xl mx-auto px-2 py-2 sm:p-0 animate-pulse">
+    <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6 animate-pulse">
       {/* 1. HEADER SKELETON */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-5">
         <div className="space-y-2">
           {/* Title line */}
           <div className="h-7 w-48 bg-slate-200 rounded-lg" />
@@ -10,10 +10,10 @@ export function DashboardSkeleton() {
           <div className="h-4 w-24 bg-slate-100 rounded-md" />
         </div>
         {/* Days controller segment */}
-        <div className="h-9 w-full sm:w-56 bg-slate-100 rounded-xl" />
+        <div className="h-10 w-full sm:w-56 bg-slate-100 rounded-xl shrink-0" />
       </div>
 
-      {/* 2. STAT CARDS SKELETON */}
+      {/*  STAT CARDS SKELETON */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
         {[...Array(4)].map((_, i) => (
           <div
@@ -34,18 +34,18 @@ export function DashboardSkeleton() {
 
       {/* 3. CHARTS CONTAINER SKELETON */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* REVENUE LINE CHART AREA (2 columns wide) */}
-        <div className="bg-white p-6 rounded-xl border border-slate-200/50 shadow-sm space-y-6 col-span-1 lg:col-span-2">
+        {/* REVENUE LINE CHART AREA (2 columns wide on desktop) */}
+        <div className="bg-white p-5 sm:p-6 rounded-xl border border-slate-200/50 shadow-sm space-y-6 lg:col-span-2">
           <div className="space-y-2">
             <div className="h-5 w-40 bg-slate-200 rounded-md" />
             <div className="h-3 w-64 bg-slate-100 rounded" />
           </div>
           {/* Chart canvas simulation */}
-          <div className="h-[280px] w-full bg-slate-50 rounded-lg flex items-end justify-between p-4 gap-2">
+          <div className="h-[280px] w-full bg-slate-50 rounded-lg flex items-end justify-between p-4 gap-1.5 sm:gap-2">
             {[...Array(12)].map((_, i) => (
               <div
                 key={i}
-                className="w-full bg-slate-200/40 rounded-t-md"
+                className="w-full bg-slate-200/40 rounded-t-sm sm:rounded-t-md"
                 style={{ height: `${Math.floor(Math.random() * 60) + 20}%` }}
               />
             ))}
@@ -53,7 +53,7 @@ export function DashboardSkeleton() {
         </div>
 
         {/* PIE DISTRIBUTION CHART (1 column wide) */}
-        <div className="bg-white p-6 rounded-xl border border-slate-200/50 shadow-sm flex flex-col justify-between gap-6">
+        <div className="bg-white p-5 sm:p-6 rounded-xl border border-slate-200/50 shadow-sm flex flex-col justify-between gap-6">
           <div className="space-y-2">
             <div className="h-5 w-32 bg-slate-200 rounded-md" />
             <div className="h-3 w-48 bg-slate-100 rounded" />
@@ -83,22 +83,22 @@ export function DashboardSkeleton() {
       </div>
 
       {/* 4. SALES FLOW CHART SKELETON */}
-      <div className="bg-white p-4 sm:p-5 rounded-xl border border-slate-200/50 shadow-sm space-y-4">
+      <div className="bg-white p-5 rounded-xl border border-slate-200/50 shadow-sm space-y-4">
         <div className="space-y-2">
           <div className="h-4 w-32 bg-slate-200 rounded" />
           <div className="h-3 w-72 bg-slate-100 rounded" />
         </div>
         {/* Flow blocks simulation */}
-        <div className="flex flex-col lg:flex-row items-center justify-between gap-3 lg:gap-4 pt-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 pt-2">
           {[...Array(4)].map((_, i) => (
             <div
               key={i}
-              className="w-full lg:flex-1 border border-slate-100 p-4 rounded-xl flex lg:flex-col items-center justify-between lg:justify-center gap-3 bg-slate-50/50"
+              className="w-full border border-slate-100 p-4 rounded-xl flex items-center sm:flex-col text-left sm:text-center gap-4 bg-slate-50/50"
             >
               <div className="w-10 h-10 bg-slate-200 rounded-lg flex-shrink-0" />
-              <div className="space-y-1.5 flex-1 lg:flex-none">
-                <div className="h-3 w-20 bg-slate-100 rounded mx-auto" />
-                <div className="h-4.5 w-24 bg-slate-200 rounded mx-auto" />
+              <div className="space-y-2 flex-1 sm:flex-none w-full">
+                <div className="h-3 w-20 bg-slate-100 rounded sm:mx-auto" />
+                <div className="h-4 w-28 bg-slate-200 rounded sm:mx-auto" />
               </div>
             </div>
           ))}
@@ -107,14 +107,14 @@ export function DashboardSkeleton() {
 
       {/* 5. RECENT ORDERS TABLE SKELETON */}
       <div className="bg-white rounded-xl border border-slate-200/50 shadow-sm overflow-hidden">
-        <div className="p-4 sm:p-5 border-b border-slate-100 flex justify-between items-center">
+        <div className="p-5 border-b border-slate-100 flex justify-between items-center">
           <div className="h-4 w-44 bg-slate-200 rounded" />
           <div className="h-5 w-16 bg-slate-100 rounded-full" />
         </div>
         <div className="overflow-x-auto">
-          <div className="w-full min-w-[600px] p-4 space-y-4">
+          <div className="w-full min-w-[768px] p-5 space-y-4">
             {/* Table headers */}
-            <div className="grid grid-cols-5 gap-4 border-b border-slate-50 pb-3">
+            <div className="grid grid-cols-5 gap-4 border-b border-slate-100 pb-3">
               {[...Array(5)].map((_, i) => (
                 <div
                   key={i}

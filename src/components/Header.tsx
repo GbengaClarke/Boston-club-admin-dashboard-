@@ -66,7 +66,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
       <div className="flex items-center gap-4">
         <button
           onClick={onMenuClick}
-          className="md:hidden text-slate-500 cursor-pointer hover:text-slate-900"
+          className="md:hidden brdx -ml-2 p-2 text-slate-500 cursor-pointer hover:text-slate-900"
         >
           <Menu className="w-5 h-5" />
         </button>
